@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Üsküdar Tanıklık Haritası</title>
+    
+    <!-- Mapbox CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.css" rel="stylesheet">
+    
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        #map { 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        /* Left panel */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+            z-index: 100;
+            width: 300px;
+            font-size: 13px;
+            max-height: 85vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .controls.hidden {
+            transform: translateX(calc(-100% - 30px));
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 101;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #555;
+        }
+        #sidebar-toggle.collapsed {
+            display: flex;
+        }
+        #sidebar-toggle:hover { background: #f5f5f5; }
+
+        #sidebar-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #aaa;
+            cursor: pointer;
+            line-height: 1;
+        }
+        #sidebar-close:hover { color: #333; }
+        
+        .controls h1 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #222;
+        }
+        
+        .controls .subtitle {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 1.25rem;
+            font-style: italic;
+        }
+        
+        .filter-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-section h3 {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            margin-bottom: 0.75rem;
+        }
+        
+        .filter-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .filter-btn {
+            padding: 0.6rem;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            color: #555;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            border-color: #999;
+            background: #f5f5f5;
+        }
+        
+        .filter-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .emotion-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .emotion-btn {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            font-size: 9px;
+            font-weight: 500;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 3px;
+            line-height: 1.1;
+        }
+        
+        .emotion-btn.active {
+            border-color: #333;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+        }
+        
+        .emotion-btn:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Stats */
+        .stats {
+            background: #f9f9f9;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .stats strong {
+            color: #333;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .select-all-btn {
+            width: 100%;
+            padding: 0.4rem;
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 0.5rem;
+            transition: background 0.2s, color 0.2s;
+            min-height: 26px;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .select-all-btn:hover {
+            background: #eee;
+            color: #333;
+        }
+
+        /* Right counter */
+        .counter {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-size: 12px;
+            color: #666;
+            z-index: 100;
+        }
+        
+        .counter strong {
+            color: #333;
+            font-size: 18px;
+            display: block;
+        }
+        
+        /* Mapbox popup */
+        .mapboxgl-popup-content {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 12px !important;
+            border-radius: 8px;
+            max-width: 400px;
+        }
+        
+        .mapboxgl-popup-content h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #222;
+        }
+        
+        .mapboxgl-popup-content p {
+            margin: 0 0 0.75rem 0;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #666;
+        }
+        
+        .mapboxgl-popup-content .person-name {
+            color: #999;
+            font-size: 11px;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .mapboxgl-popup-content .sensory {
+            background: #f5f5f5;
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #777;
+            margin: 0.75rem 0;
+        }
+        
+        .video-player {
+            margin: 1rem 0 0 0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .video-player iframe {
+            width: 100%;
+            height: 200px;
+            border: none;
+        }
+        
+        .video-note {
+            font-size: 10px;
+            color: #999;
+            font-style: italic;
+            margin-top: 0.5rem;
+        }
+
+        /* Floating video panel */
+        #video-panel {
+            display: none;
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 480px;
+            background: #111;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+        #video-panel.visible {
+            display: block;
+        }
+        #video-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #1a1a1a;
+        }
+        #video-panel-title {
+            font-size: 12px;
+            color: #ccc;
+            font-style: italic;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #video-panel-close {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 0 0 12px;
+            flex-shrink: 0;
+        }
+        #video-panel-close:hover { color: #fff; }
+        #video-panel iframe {
+            display: block;
+            width: 100%;
+            height: 270px;
+            border: none;
+        }
+
+        /* Play video button inside popup */
+        .play-video-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 0.75rem;
+            padding: 6px 14px;
+            background: #222;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .play-video-btn:hover { background: #444; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Floating video panel -->
+<div id="video-panel">
+    <div id="video-panel-header">
+        <span id="video-panel-title">Sözlü tarih görüşmesi (kayıt)</span>
+        <button id="video-panel-close" onclick="closeVideoPanel()">✕</button>
+    </div>
+    <iframe id="video-panel-iframe" src="" allowfullscreen allow="autoplay; encrypted-media; fullscreen"></iframe>
+</div>
+
+<!-- Sidebar open button (shown when closed) -->
+<button id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+<!-- Left control panel -->
+<div class="controls">
+    <button id="sidebar-close" onclick="toggleSidebar()" title="Kapat">✕</button>
+    <h1>Üsküdar Tanıklık Haritası</h1>
+    <p class="subtitle"></p>
+    
+    <!-- FILTER 1: PEOPLE -->
+    <div class="filter-section">
+        <h3>Kişiye Göre</h3>
+        <button class="select-all-btn" id="peopleToggleAll">Hiçbirini Seçme</button>
+        <div class="filter-options" id="peopleGrid"></div>
+    </div>
+
+    <!-- FILTER 2: EMOTIONS -->
+    <div class="filter-section">
+        <h3>Duyguya Göre</h3>
+        <button class="select-all-btn" id="emotionToggleAll">Hiçbirini Seçme</button>
+        <div class="emotion-grid" id="emotionGrid"></div>
+    </div>
+    
+    <!-- STATS -->
+    <div class="stats">
+        <strong id="storyCount">Anılar yükleniyor...</strong>
+        <div id="activeFilters">Tüm kişiler ve duygular gösteriliyoruz</div>
+    </div>
+</div>
+
+<!-- Right counter -->
+<div class="counter">
+    <div style="text-align: center;">
+        <div style="font-size: 11px; color: #999; margin-bottom: 0.25rem;">Görünen Anılar</div>
+        <strong id="markerCount">0</strong>
+    </div>
+</div>
+
+<!-- Mapbox GL JS Library -->
+<script src="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.js"></script>
+
+<script>
+    // ========================================
+    // CONFIGURATION
+    // ========================================
+    
+    mapboxgl.accessToken = 'pk.eyJ1IjoicnVkaXB5YW4iLCJhIjoiY21ueDY0c2cwMDE3MjJyc2NkamNhOGFjcSJ9.ZqMex6g_XLF9yX4kilbL7w';
+    
+    // Story data with people and emotions (emotions is an array — can have multiple)
+    const stories = [
+        // SIBEL'S STORIES
+        {
+            id: 1,
+            person: "Sibel",
+            title: "Kilise Bahçesinin Anısı",
+            lat: 41.0285,
+            lng: 29.0330,
+            emotions: ["purple", "green"],
+            narrative: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.",
+            sensory: "Eski taşların kokusu, çan sesinin yankısı, bahçenin huzuru",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 2,
+            person: "Sibel",
+            title: "Sokakta Oynanan Oyunlar",
+            lat: 41.0288,
+            lng: 29.0325,
+            emotions: ["orange"],
+            narrative: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            sensory: "Çocukların gülüşü, topun ses, sokağın ısısı",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 3,
+            person: "Sibel",
+            title: "Pazarın Renkli Günleri",
+            lat: 41.0290,
+            lng: 29.0335,
+            emotions: ["green", "orange"],
+            narrative: "Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis.",
+            sensory: "Baharat kokusu, tezgah seslerinin karışması, kalabalık havası",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 4,
+            person: "Sibel",
+            title: "Kaybolan Evler",
+            lat: 41.0283,
+            lng: 29.0328,
+            emotions: ["blue", "purple"],
+            narrative: "Nam liber tempor cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.",
+            sensory: "Harç ve tuğlanın eski kokusu, sessizlik, melankoli",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 5,
+            person: "Sibel",
+            title: "Geçmiş Zamanın Haykırışı",
+            lat: 41.0292,
+            lng: 29.0333,
+            emotions: ["red"],
+            narrative: "Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus.",
+            sensory: "Sınır çizmenin sesi, kırılmanın hissi",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+
+        // BAYZAR'S STORIES
+        {
+            id: 6,
+            person: "Bayzar",
+            title: "Erkek Kahvesinin Dönemesi",
+            lat: 41.0286,
+            lng: 29.0332,
+            emotions: ["orange", "purple"],
+            narrative: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam.",
+            sensory: "Kahvenin acı kokusu, satranç taşlarının tıklaması",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 7,
+            person: "Bayzar",
+            title: "Ticaret Yollarının Birleştiği Yer",
+            lat: 41.0289,
+            lng: 29.0329,
+            emotions: ["green"],
+            narrative: "Ut enim ad minim veniam, quis nostrud exercitation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat duis aute.",
+            sensory: "Deve kervanlarının çanları, yapı malı sesinin karışması",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 8,
+            person: "Bayzar",
+            title: "Baba'nın Mağazası",
+            lat: 41.0284,
+            lng: 29.0326,
+            emotions: ["purple", "green"],
+            narrative: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque.",
+            sensory: "Kumaşların koklaması, dukkanın camında yansıyan sokak",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 9,
+            person: "Bayzar",
+            title: "Demirlemeyi Öğrenme",
+            lat: 41.0291,
+            lng: 29.0331,
+            emotions: ["blue"],
+            narrative: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione.",
+            sensory: "Metal üzerinde çekiç sesi, ocağın sıcaklığı",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+
+        // NADYA'S STORIES
+        {
+            id: 10,
+            person: "Nadya",
+            title: "Evdeki Cıvata Dokumalar",
+            lat: 41.0287,
+            lng: 29.0327,
+            emotions: ["green"],
+            narrative: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat.",
+            sensory: "Kumaşın hışırtısı, iplik kokusunun hafifliği",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 11,
+            person: "Nadya",
+            title: "Anne'nin Mutfağında",
+            lat: 41.0282,
+            lng: 29.0334,
+            emotions: ["orange", "green"],
+            narrative: "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti.",
+            sensory: "Baharat kokuları, kaynatılan çorbanın buharı",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 12,
+            person: "Nadya",
+            title: "Bitişik Evlerin Duvarları",
+            lat: 41.0293,
+            lng: 29.0330,
+            emotions: ["purple"],
+            narrative: "Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio.",
+            sensory: "Komşuluk seslerinin yakınlığı, duvarların koyuluk rengi",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 13,
+            person: "Nadya",
+            title: "Hastalık Döneminde Yalnızlık",
+            lat: 41.0285,
+            lng: 29.0324,
+            emotions: ["blue", "black"],
+            narrative: "Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae.",
+            sensory: "Pembe dönemin sessizliği, pencereden gelen işık",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+
+        // MIKAIL'S STORIES
+        {
+            id: 14,
+            person: "Mikail",
+            title: "Boğaz'ı Seyretme Yeri",
+            lat: 41.0288,
+            lng: 29.0336,
+            emotions: ["orange"],
+            narrative: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa.",
+            sensory: "Deniz havasının tuzluluğu, çığlıklar, gemi kornası",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 15,
+            person: "Mikail",
+            title: "Nersesyan Varjaran Okulu",
+            lat: 41.0281,
+            lng: 29.0329,
+            emotions: ["green", "purple"],
+            narrative: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione.",
+            sensory: "At ayaklarının duvarlara çarpması, sahibinin sesinin yankısı",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 16,
+            person: "Mikail",
+            title: "Kütüphanenin Kokusunda Kayıp",
+            lat: 41.0290,
+            lng: 29.0323,
+            emotions: ["green", "purple"],
+            narrative: "Nam liber tempor cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus omnis.",
+            sensory: "Kitap kağıdının eski kokusunun rahatlığı, sessiz ortam",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+        {
+            id: 17,
+            person: "Mikail",
+            title: "Gemiyi Görememenin Üzüntüsü",
+            lat: 41.0284,
+            lng: 29.0332,
+            emotions: ["blue", "red"],
+            narrative: "Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe.",
+            sensory: "Ufuğun sonsuzluğunun üzerine düşmek, bekleyişin tediği",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        },
+       {
+            id: 18,
+            person: "Mikail",
+            title: "Demirci Dükkânı",
+            lat: 41.03390715820939,
+            lng: 29.031161149808515,
+            locationKnown: false,
+            emotions: ["black", "purple", "orange"],
+            narrative: "TBF",
+            sensory: "TBF",
+            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+       }, 
+    ];
+    
+    // Emotion colors
+    const emotionData = {
+        blue: { hex: '#4A90E2', label: 'Üzüntü' },
+        purple: { hex: '#9B59B6', label: 'Nostalji' },
+        orange: { hex: '#FF9800', label: 'Mutluluk' },
+        green: { hex: '#27AE60', label: 'Aidiyet' },
+        red: { hex: '#E74C3C', label: 'Öfke' },
+        black: { hex: '#2C2C2C', label: 'Korku' }
+    };
+    
+    // People names
+    const people = ['Sibel', 'Bayzar', 'Nadya', 'Mikail'];
+    
+    // ========================================
+    // STATE MANAGEMENT
+    // ========================================
+    
+    let activePeople = new Set(people);
+    let activeEmotions = new Set(Object.keys(emotionData));
+    let markerElements = {};
+    let markerObjects = {};
+    
+    // ========================================
+    // CREATE MAP
+    // ========================================
+    
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [29.033029012546365, 41.028500902039596],
+        zoom: 15,
+        pitch: 0,
+        bearing: 0
+    });
+    
+    map.on('load', () => {
+        // ========================================
+        // BUILD PEOPLE FILTER
+        // ========================================
+        
+        function buildPeopleFilter() {
+            const grid = document.getElementById('peopleGrid');
+            grid.innerHTML = '';
+            people.forEach(personName => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn active';
+                btn.textContent = personName;
+                btn.dataset.person = personName;
+
+                btn.onclick = () => togglePerson(personName, btn);
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('peopleToggleAll').onclick = () => {
+                const allSelected = activePeople.size === people.length;
+                if (allSelected) {
+                    activePeople.clear();
+                    grid.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    document.getElementById('peopleToggleAll').textContent = 'Hepsini Seç';
+                } else {
+                    people.forEach(p => activePeople.add(p));
+                    grid.querySelectorAll('.filter-btn').forEach(b => b.classList.add('active'));
+                    document.getElementById('peopleToggleAll').textContent = 'Hiçbirini Seçme';
+                }
+                updateMarkerVisibility();
+                updateStats();
+            };
+        }
+
+        function togglePerson(personName, btn) {
+            if (activePeople.has(personName)) {
+                activePeople.delete(personName);
+                btn.classList.remove('active');
+            } else {
+                activePeople.add(personName);
+                btn.classList.add('active');
+            }
+            const allSelected = activePeople.size === people.length;
+            document.getElementById('peopleToggleAll').textContent = allSelected ? 'Hiçbirini Seçme' : 'Hepsini Seç';
+            updateMarkerVisibility();
+            updateStats();
+        }
+        
+        // ========================================
+        // BUILD EMOTION FILTER
+        // ========================================
+        
+        function buildEmotionFilter() {
+            const grid = document.getElementById('emotionGrid');
+            grid.innerHTML = '';
+            const allEmotionKeys = Object.keys(emotionData);
+            Object.entries(emotionData).forEach(([emotion, { hex, label }]) => {
+                const btn = document.createElement('button');
+                btn.className = 'emotion-btn active';
+                btn.style.backgroundColor = hex;
+                btn.innerHTML = label;
+                btn.title = emotion;
+                btn.dataset.emotion = emotion;
+
+                btn.onclick = () => toggleEmotion(emotion, btn);
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('emotionToggleAll').onclick = () => {
+                const allSelected = activeEmotions.size === allEmotionKeys.length;
+                if (allSelected) {
+                    activeEmotions.clear();
+                    grid.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
+                    document.getElementById('emotionToggleAll').textContent = 'Hepsini Seç';
+                } else {
+                    allEmotionKeys.forEach(e => activeEmotions.add(e));
+                    grid.querySelectorAll('.emotion-btn').forEach(b => b.classList.add('active'));
+                    document.getElementById('emotionToggleAll').textContent = 'Hiçbirini Seçme';
+                }
+                updateMarkerVisibility();
+                updateStats();
+            };
+        }
+
+        function toggleEmotion(emotion, btn) {
+            if (activeEmotions.has(emotion)) {
+                activeEmotions.delete(emotion);
+                btn.classList.remove('active');
+            } else {
+                activeEmotions.add(emotion);
+                btn.classList.add('active');
+            }
+            const allSelected = activeEmotions.size === Object.keys(emotionData).length;
+            document.getElementById('emotionToggleAll').textContent = allSelected ? 'Hiçbirini Seçme' : 'Hepsini Seç';
+            updateMarkerVisibility();
+            updateStats();
+        }
+        
+        // ========================================
+        // UPDATE VISIBILITY
+        // ========================================
+        
+        function updateMarkerVisibility() {
+            let visibleCount = 0;
+            stories.forEach(story => {
+                const isVisible = activePeople.has(story.person) &&
+                    story.emotions.some(e => activeEmotions.has(e));
+                if (markerElements[story.id]) {
+                    markerElements[story.id].style.display = isVisible ? 'block' : 'none';
+                }
+                if (isVisible) visibleCount++;
+            });
+            document.getElementById('markerCount').textContent = visibleCount;
+        }
+        
+        function updateStats() {
+            const personList = Array.from(activePeople).join(', ');
+            const emotionList = Array.from(activeEmotions).map(e => emotionData[e].label).join(', ');
+            
+            document.getElementById('activeFilters').innerHTML = `
+                <strong style="font-size: 10px; color: #555;">Kişiler:</strong> ${personList || 'Hiçbiri'}<br>
+                <strong style="font-size: 10px; color: #555;">Duygular:</strong> ${emotionList || 'Hiçbiri'}
+            `;
+        }
+        
+        // ========================================
+        // ADD DRAGGABLE MARKERS
+        // ========================================
+        
+        // Build canvas particle marker — 70 micro-dots that repel from cursor.
+        // physicalSize: actual canvas pixel dimensions; CSS display size stays fixed at BASE_SIZE.
+        // This keeps pixel density 1:1 at all zoom levels, preventing blur.
+        const BASE_SIZE = 44;
+        function buildParticleMarker(emotions, physicalSize, drifting) {
+            const SIZE = physicalSize || BASE_SIZE;
+            const scale = SIZE / BASE_SIZE;
+            const cx = SIZE / 2, cy = SIZE / 2;
+            // Drifting markers use a wider, looser cluster to suggest uncertain location
+            const clusterR = (drifting ? 20 : 14) * scale;
+            const repR     = 13 * scale;
+            const N = 70;
+            const n = emotions.length;
+
+            const canvas = document.createElement('canvas');
+            canvas.width  = SIZE;
+            canvas.height = SIZE;
+            // CSS display size matches canvas pixels — 1:1 density, sharp at all zoom levels
+            canvas.style.width  = SIZE + 'px';
+            canvas.style.height = SIZE + 'px';
+            canvas.style.display = 'block';
+            canvas.style.cursor  = 'pointer';
+
+            const ctx = canvas.getContext('2d');
+
+            // Build particles — randomly mixed emotions across full cluster
+            const particles = Array.from({ length: N }, (_, i) => {
+                const emotion = emotions[i % n];
+                const angle  = Math.random() * Math.PI * 2;
+                const dist   = Math.sqrt(Math.random()) * clusterR;
+                const hx = cx + dist * Math.cos(angle);
+                const hy = cy + dist * Math.sin(angle);
+                return {
+                    x: hx, y: hy, hx, hy,
+                    vx: 0, vy: 0,
+                    r: (0.8 + Math.random() * 0.7) * scale,
+                    color: emotionData[emotion].hex
+                };
+            });
+
+            let mouseX = -999, mouseY = -999;
+            let hovering = false;
+            let rafId = null;
+
+            function tick() {
+                ctx.clearRect(0, 0, SIZE, SIZE);
+                let anyMoving = false;
+
+                for (const p of particles) {
+                    // Repulsion from cursor
+                    if (hovering) {
+                        const dx = p.x - mouseX;
+                        const dy = p.y - mouseY;
+                        const d2 = dx * dx + dy * dy;
+                        if (d2 < repR * repR && d2 > 0.001) {
+                            const d = Math.sqrt(d2);
+                            const f = (1 - d / repR) * 1.4;
+                            p.vx += (dx / d) * f;
+                            p.vy += (dy / d) * f;
+                        }
+                    }
+
+                    // Spring back home
+                    p.vx += (p.hx - p.x) * 0.1;
+                    p.vy += (p.hy - p.y) * 0.1;
+
+                    // Friction
+                    p.vx *= 0.8;
+                    p.vy *= 0.8;
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (Math.abs(p.vx) > 0.02 || Math.abs(p.vy) > 0.02) anyMoving = true;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                }
+
+                rafId = (hovering || anyMoving) ? requestAnimationFrame(tick) : null;
+            }
+
+            function startAnim() { if (!rafId) rafId = requestAnimationFrame(tick); }
+
+            canvas.addEventListener('mouseenter', (e) => {
+                hovering = true;
+                canvas._hovering = true; // expose hover state for zoom rebuild check
+                const rect = canvas.getBoundingClientRect();
+                // CSS size == canvas size (1:1), no scale conversion needed
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
+                startAnim();
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
+            });
+            canvas.addEventListener('mouseleave', () => {
+                hovering = false;
+                canvas._hovering = false;
+                mouseX = -999; mouseY = -999;
+                startAnim(); // keep running until particles settle
+            });
+
+            // Initial static render
+            tick();
+            return canvas;
+        }
+
+        stories.forEach(story => {
+            // Outer el: used by Mapbox for positioning (transform must not be overridden)
+            const el = document.createElement('div');
+            el.style.cursor = 'pointer';
+
+            // Inner wrapper: safe to apply scale without conflicting with Mapbox positioning
+            const inner = document.createElement('div');
+            inner.id = `marker-${story.id}`;
+            inner.style.transformOrigin = 'center center';
+            inner.appendChild(buildParticleMarker(story.emotions, null, story.locationKnown === false));
+            el.appendChild(inner);
+
+            // Emotion tags for popup
+            const emotionTags = story.emotions.map(e =>
+                `<span style="display:inline-flex;align-items:center;gap:4px;background:${emotionData[e].hex}22;
+                 color:${emotionData[e].hex};border:1px solid ${emotionData[e].hex}55;
+                 border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;">
+                 <span style="width:7px;height:7px;border-radius:50%;background:${emotionData[e].hex};display:inline-block;"></span>
+                 ${emotionData[e].label}</span>`
+            ).join(' ');
+
+            // Create popup with video
+            const popupHTML = `
+                <h3>${story.title}</h3>
+                <div class="person-name"><strong>${story.person}</strong></div>
+                <div style="margin-bottom:0.75rem;">${emotionTags}</div>
+                <p>${story.narrative}</p>
+                <div class="sensory">
+                    <strong style="color: #555; font-size: 11px;">Duyu Anısı:</strong><br>
+                    ${story.sensory}
+                </div>
+                <div style="text-align:center; margin-top: 0.75rem;">
+                    <button class="play-video-btn" onclick="openVideoPanel('${story.videoUrl}', '${story.title} — ${story.person}')">
+                        ▶ Tanıklığı İzle
+                    </button>
+                </div>
+            `;
+            
+            const popup = new mapboxgl.Popup({ 
+                offset: 15,
+                maxWidth: '420px',
+                closeButton: true
+            }).setHTML(popupHTML);
+            
+            // Create marker (not draggable)
+            const marker = new mapboxgl.Marker(el)
+                .setLngLat([story.lng, story.lat])
+                .setPopup(popup)
+                .addTo(map);
+            
+            markerElements[story.id] = inner; // scale applied to inner, not el
+            markerObjects[story.id] = marker;
+
+            // Drift animation for markers with unknown location
+            if (story.locationKnown === false) {
+                const baseLat = story.lat;
+                const baseLng = story.lng;
+                // Use overlapping sine waves with different periods for organic wandering
+                const t0 = Math.random() * 1000; // random phase offset so each marker drifts differently
+                const DRIFT_R = 0.0008; // radius in degrees (~80m)
+                function drift() {
+                    const t = (Date.now() - t0) / 1000;
+                    const lat = baseLat + Math.sin(t * 0.17) * DRIFT_R + Math.sin(t * 0.41) * DRIFT_R * 0.4;
+                    const lng = baseLng + Math.cos(t * 0.23) * DRIFT_R + Math.cos(t * 0.37) * DRIFT_R * 0.4;
+                    marker.setLngLat([lng, lat]);
+                    requestAnimationFrame(drift);
+                }
+                drift();
+            }
+        });
+        
+        function updateCoordinates(story) {
+            // Coordinates updated in background only — logged to console, not shown in UI
+            console.log(`${story.person} — ${story.title}: Lat=${story.lat.toFixed(8)}, Lng=${story.lng.toFixed(8)}`);
+        }
+        
+        // Rebuild marker canvases at zoom-appropriate physical size — no CSS scaling,
+        // so pixel density stays 1:1 and markers never blur.
+        const SCALE_THRESHOLD = 16;  // zoom level below which markers stay at BASE_SIZE
+        const SCALE_FACTOR    = 1.6; // growth multiplier per zoom step above threshold
+        let lastRebuildZoom   = null;
+        function updateMarkerScales() {
+            const z = map.getZoom();
+            // Rebuild only when zoom crosses a 0.25-step boundary to avoid rebuilding every frame
+            const bucket = Math.round(z * 4) / 4;
+            if (bucket === lastRebuildZoom) return;
+            lastRebuildZoom = bucket;
+
+            const cssScale = z > SCALE_THRESHOLD
+                ? Math.pow(SCALE_FACTOR, z - SCALE_THRESHOLD)
+                : 1;
+            const physicalSize = Math.round(BASE_SIZE * cssScale);
+
+            stories.forEach(story => {
+                const inner = markerElements[story.id];
+                if (!inner) return;
+                const oldCanvas = inner.querySelector('canvas');
+                if (!oldCanvas) return;
+                // Skip rebuild while user is hovering — avoids interrupting the animation
+                if (oldCanvas._hovering) return;
+                // Rebuild canvas at new physical size — preserves sharpness
+                const newCanvas = buildParticleMarker(story.emotions, physicalSize, story.locationKnown === false);
+                inner.replaceChild(newCanvas, oldCanvas);
+            });
+        }
+        map.on('zoom', updateMarkerScales);
+
+        // Initialize filters
+        buildPeopleFilter();
+        buildEmotionFilter();
+        updateStats();
+        updateMarkerVisibility();
+    });
+    
+    map.on('error', (e) => {
+        console.error('Mapbox error:', e.error.message);
+    });
+
+    function toggleSidebar() {
+        const controls = document.querySelector('.controls');
+        const btn = document.getElementById('sidebar-toggle');
+        controls.classList.toggle('hidden');
+        btn.classList.toggle('collapsed');
+    }
+
+    function openVideoPanel(url, title) {
+        const panel = document.getElementById('video-panel');
+        const iframe = document.getElementById('video-panel-iframe');
+        const titleEl = document.getElementById('video-panel-title');
+        // Close all popups
+        document.querySelectorAll('.mapboxgl-popup').forEach(p => p.remove());
+        // Set video
+        iframe.src = url;
+        titleEl.textContent = title || 'Sözlü tarih görüşmesi (kayıt)';
+        panel.classList.add('visible');
+    }
+
+    function closeVideoPanel() {
+        const panel = document.getElementById('video-panel');
+        const iframe = document.getElementById('video-panel-iframe');
+        panel.classList.remove('visible');
+        iframe.src = ''; // stop video playback
+    }
+</script>
+
+</body>
+</html>
