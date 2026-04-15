@@ -382,10 +382,10 @@
 </div>
 
 <!-- Sidebar open button (shown when closed) -->
-<button id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<button id="sidebar-toggle" class="collapsed" onclick="toggleSidebar()">☰</button>
 
 <!-- Left control panel -->
-<div class="controls">
+<div class="controls hidden">
     <button id="sidebar-close" onclick="toggleSidebar()" title="Kapat">✕</button>
     <h1>Üsküdar Tanıklık Haritası</h1>
     <p class="subtitle"></p>
@@ -431,199 +431,182 @@
     
     // Story data with people and emotions (emotions is an array — can have multiple)
     const stories = [
-        // SIBEL'S STORIES
+        // INTERVIEWEE 1'S STORIES
         {
             id: 1,
-            person: "Sibel",
+            person: "Interviewee 1",
             title: "Kilise Bahçesinin Anısı",
             lat: 41.0285,
             lng: 29.0330,
             emotions: ["purple", "green"],
             narrative: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.",
-            sensory: "Eski taşların kokusu, çan sesinin yankısı, bahçenin huzuru",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 2,
-            person: "Sibel",
+            person: "Interviewee 1",
             title: "Sokakta Oynanan Oyunlar",
             lat: 41.0288,
             lng: 29.0325,
             emotions: ["orange"],
             narrative: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            sensory: "Çocukların gülüşü, topun ses, sokağın ısısı",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 3,
-            person: "Sibel",
+            person: "Interviewee 1",
             title: "Pazarın Renkli Günleri",
             lat: 41.0290,
             lng: 29.0335,
             emotions: ["green", "orange"],
             narrative: "Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis.",
-            sensory: "Baharat kokusu, tezgah seslerinin karışması, kalabalık havası",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 4,
-            person: "Sibel",
+            person: "Interviewee 1",
             title: "Kaybolan Evler",
             lat: 41.0283,
             lng: 29.0328,
             emotions: ["blue", "purple"],
             narrative: "Nam liber tempor cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.",
-            sensory: "Harç ve tuğlanın eski kokusu, sessizlik, melankoli",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 5,
-            person: "Sibel",
+            person: "Interviewee 1",
             title: "Geçmiş Zamanın Haykırışı",
             lat: 41.0292,
             lng: 29.0333,
             emotions: ["red"],
             narrative: "Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus.",
-            sensory: "Sınır çizmenin sesi, kırılmanın hissi",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
 
-        // BAYZAR'S STORIES
+        // INTERVIEWEE 2'S STORIES
         {
             id: 6,
-            person: "Bayzar",
+            person: "Interviewee 2",
             title: "Erkek Kahvesinin Dönemesi",
             lat: 41.0286,
             lng: 29.0332,
             emotions: ["orange", "purple"],
             narrative: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam.",
-            sensory: "Kahvenin acı kokusu, satranç taşlarının tıklaması",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 7,
-            person: "Bayzar",
+            person: "Interviewee 2",
             title: "Ticaret Yollarının Birleştiği Yer",
             lat: 41.0289,
             lng: 29.0329,
             emotions: ["green"],
             narrative: "Ut enim ad minim veniam, quis nostrud exercitation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat duis aute.",
-            sensory: "Deve kervanlarının çanları, yapı malı sesinin karışması",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 8,
-            person: "Bayzar",
+            person: "Interviewee 2",
             title: "Baba'nın Mağazası",
             lat: 41.0284,
             lng: 29.0326,
             emotions: ["purple", "green"],
             narrative: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque.",
-            sensory: "Kumaşların koklaması, dukkanın camında yansıyan sokak",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 9,
-            person: "Bayzar",
+            person: "Interviewee 2",
             title: "Demirlemeyi Öğrenme",
             lat: 41.0291,
             lng: 29.0331,
             emotions: ["blue"],
             narrative: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione.",
-            sensory: "Metal üzerinde çekiç sesi, ocağın sıcaklığı",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
 
-        // NADYA'S STORIES
+        // INTERVIEWEE 3'S STORIES
         {
             id: 10,
-            person: "Nadya",
+            person: "Interviewee 3",
             title: "Evdeki Cıvata Dokumalar",
             lat: 41.0287,
             lng: 29.0327,
             emotions: ["green"],
             narrative: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat.",
-            sensory: "Kumaşın hışırtısı, iplik kokusunun hafifliği",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 11,
-            person: "Nadya",
+            person: "Interviewee 3",
             title: "Anne'nin Mutfağında",
             lat: 41.0282,
             lng: 29.0334,
             emotions: ["orange", "green"],
             narrative: "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti.",
-            sensory: "Baharat kokuları, kaynatılan çorbanın buharı",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 12,
-            person: "Nadya",
+            person: "Interviewee 3",
             title: "Bitişik Evlerin Duvarları",
             lat: 41.0293,
             lng: 29.0330,
             emotions: ["purple"],
             narrative: "Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio.",
-            sensory: "Komşuluk seslerinin yakınlığı, duvarların koyuluk rengi",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 13,
-            person: "Nadya",
+            person: "Interviewee 3",
             title: "Hastalık Döneminde Yalnızlık",
             lat: 41.0285,
             lng: 29.0324,
             emotions: ["blue", "black"],
             narrative: "Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae.",
-            sensory: "Pembe dönemin sessizliği, pencereden gelen işık",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
 
-        // MIKAIL'S STORIES
+        // INTERVIEWEE 4'S STORIES
         {
             id: 14,
-            person: "Mikail",
+            person: "Interviewee 4",
             title: "Boğaz'ı Seyretme Yeri",
             lat: 41.0288,
             lng: 29.0336,
             emotions: ["orange"],
             narrative: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa.",
-            sensory: "Deniz havasının tuzluluğu, çığlıklar, gemi kornası",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 15,
-            person: "Mikail",
+            person: "Interviewee 4",
             title: "Nersesyan Varjaran Okulu",
             lat: 41.0281,
             lng: 29.0329,
             emotions: ["green", "purple"],
             narrative: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione.",
-            sensory: "At ayaklarının duvarlara çarpması, sahibinin sesinin yankısı",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 16,
-            person: "Mikail",
+            person: "Interviewee 4",
             title: "Kütüphanenin Kokusunda Kayıp",
             lat: 41.0290,
             lng: 29.0323,
             emotions: ["green", "purple"],
             narrative: "Nam liber tempor cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus omnis.",
-            sensory: "Kitap kağıdının eski kokusunun rahatlığı, sessiz ortam",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
         {
             id: 17,
-            person: "Mikail",
+            person: "Interviewee 4",
             title: "Gemiyi Görememenin Üzüntüsü",
             lat: 41.0284,
             lng: 29.0332,
             emotions: ["blue", "red"],
             narrative: "Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe.",
-            sensory: "Ufuğun sonsuzluğunun üzerine düşmek, bekleyişin tediği",
-            videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            sensory: "TBF"
         },
        {
             id: 18,
@@ -632,9 +615,9 @@
             lat: 41.03390715820939,
             lng: 29.031161149808515,
             locationKnown: false,
-            emotions: ["black", "purple", "orange"],
-            narrative: "TBF",
-            sensory: "TBF",
+            emotions: ["black", "purple"],
+            narrative: "This story follows a master blacksmith from Kuzguncuk whose life was upended by the 1942 Wealth Tax, losing his business and being sent away to work while his family struggled to start over.",
+            sensory: "Stripped livelihood, clanging hammers, bitter exile, and lifelong resentment",
             videoUrl: "https://www.youtube.com/embed/kmkJ-TqVH_Y"
        }, 
     ];
@@ -650,7 +633,7 @@
     };
     
     // People names
-    const people = ['Sibel', 'Bayzar', 'Nadya', 'Mikail'];
+    const people = ['Interviewee 1', 'Interviewee 2', 'Interviewee 3', 'Interviewee 4', 'Mikail'];
     
     // ========================================
     // STATE MANAGEMENT
@@ -946,11 +929,11 @@
                     <strong style="color: #555; font-size: 11px;">Duyu Anısı:</strong><br>
                     ${story.sensory}
                 </div>
-                <div style="text-align:center; margin-top: 0.75rem;">
+                ${story.videoUrl ? `<div style="text-align:center; margin-top: 0.75rem;">
                     <button class="play-video-btn" onclick="openVideoPanel('${story.videoUrl}', '${story.title} — ${story.person}')">
                         ▶ Tanıklığı İzle
                     </button>
-                </div>
+                </div>` : ''}
             `;
             
             const popup = new mapboxgl.Popup({ 
