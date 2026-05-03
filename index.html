@@ -942,11 +942,18 @@
                 closeButton: true
             }).setHTML(popupHTML);
             
-            // Create marker (not draggable)
-            const marker = new mapboxgl.Marker(el)
+            // Create marker (draggable for coordinate adjustment)
+            const marker = new mapboxgl.Marker({ element: el, draggable: true })
                 .setLngLat([story.lng, story.lat])
                 .setPopup(popup)
                 .addTo(map);
+
+            marker.on('dragend', () => {
+                const lngLat = marker.getLngLat();
+                story.lat = lngLat.lat;
+                story.lng = lngLat.lng;
+                updateCoordinates(story);
+            });
             
             markerElements[story.id] = inner; // scale applied to inner, not el
             markerObjects[story.id] = marker;
@@ -970,8 +977,26 @@
         });
         
         function updateCoordinates(story) {
-            // Coordinates updated in background only — logged to console, not shown in UI
-            console.log(`${story.person} — ${story.title}: Lat=${story.lat.toFixed(8)}, Lng=${story.lng.toFixed(8)}`);
+            const msg = `${story.person} — ${story.title}\nLat: ${story.lat.toFixed(8)}\nLng: ${story.lng.toFixed(8)}`;
+            console.log(msg);
+
+            let toast = document.getElementById('coord-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'coord-toast';
+                Object.assign(toast.style, {
+                    position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
+                    background: 'rgba(0,0,0,0.82)', color: '#fff', padding: '10px 18px',
+                    borderRadius: '8px', fontFamily: 'monospace', fontSize: '13px',
+                    whiteSpace: 'pre', zIndex: 9999, pointerEvents: 'none',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.4)'
+                });
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 4000);
         }
         
         // Rebuild marker canvases at zoom-appropriate physical size — no CSS scaling,
