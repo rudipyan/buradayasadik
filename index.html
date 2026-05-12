@@ -9,24 +9,24 @@
     <link href="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.css" rel="stylesheet">
     
     <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
+
         html, body {
             width: 100%;
             height: 100%;
         }
-        
-        body { 
+
+        body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #f5f5f5;
             color: #333;
         }
-        
-        #map { 
+
+        #map {
             position: absolute;
             top: 0;
             left: 0;
@@ -34,29 +34,111 @@
             height: 100%;
             z-index: 0;
         }
-        
-        /* Left panel */
+
+        /* ── Sidebar ─────────────────────────────────── */
         .controls {
             position: fixed;
             top: 20px;
             left: 20px;
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
             z-index: 100;
-            width: 300px;
+            width: 288px;
             font-size: 13px;
-            max-height: 85vh;
+            max-height: calc(100vh - 40px);
             overflow-y: auto;
-            transition: transform 0.3s ease, opacity 0.3s ease;
+            overflow-x: hidden;
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.28s ease;
+            scrollbar-width: thin;
+            scrollbar-color: #ddd transparent;
         }
+        .controls::-webkit-scrollbar { width: 4px; }
+        .controls::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
         .controls.hidden {
             transform: translateX(calc(-100% - 30px));
             opacity: 0;
             pointer-events: none;
         }
 
+        /* Sidebar header */
+        .sidebar-header {
+            padding: 16px 16px 0 16px;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .sidebar-top-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .controls h1 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            line-height: 1.3;
+            flex: 1;
+            padding-right: 8px;
+        }
+
+        .controls .subtitle {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        #sidebar-close {
+            background: none;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #aaa;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+        #sidebar-close:hover { background: #f3f3f3; color: #444; }
+
+        /* Search bar */
+        .search-wrap {
+            padding: 10px 16px 0 16px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 7px 10px 7px 32px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #333;
+            background: #fafafa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .search-input:focus {
+            border-color: #bbb;
+            background-color: #fff;
+        }
+        .search-input::placeholder { color: #bbb; }
+
+        /* Sidebar body */
+        .sidebar-body {
+            padding: 12px 16px 16px 16px;
+        }
+
+        /* Sidebar toggle button (when closed) */
         #sidebar-toggle {
             position: fixed;
             top: 20px;
@@ -64,245 +146,269 @@
             z-index: 101;
             background: white;
             border: none;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-            width: 36px;
-            height: 36px;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.06);
+            width: 38px;
+            height: 38px;
             cursor: pointer;
             display: none;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 15px;
             color: #555;
+            transition: background 0.15s;
         }
-        #sidebar-toggle.collapsed {
-            display: flex;
-        }
+        #sidebar-toggle.collapsed { display: flex; }
         #sidebar-toggle:hover { background: #f5f5f5; }
 
-        #sidebar-close {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: none;
-            border: none;
-            font-size: 16px;
-            color: #aaa;
-            cursor: pointer;
-            line-height: 1;
-        }
-        #sidebar-close:hover { color: #333; }
-        
-        .controls h1 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-            color: #222;
-        }
-        
-        .controls .subtitle {
-            font-size: 11px;
-            color: #999;
-            margin-bottom: 1.25rem;
-            font-style: italic;
-        }
-        
+        /* ── Filter sections ──────────────────────────── */
         .filter-section {
-            margin-bottom: 1.5rem;
+            margin-bottom: 16px;
         }
-        
-        .filter-section h3 {
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #666;
-            margin-bottom: 0.75rem;
-        }
-        
-        .filter-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 1rem;
-        }
-        
-        .filter-btn {
-            padding: 0.6rem;
-            border: 2px solid #ddd;
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 500;
-            color: #555;
-            transition: all 0.2s;
-        }
-        
-        .filter-btn:hover {
-            border-color: #999;
-            background: #f5f5f5;
-        }
-        
-        .filter-btn.active {
-            background: #333;
-            color: white;
-            border-color: #333;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        
-        .emotion-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 1rem;
-        }
-        
-        .emotion-btn {
-            aspect-ratio: 1;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-            cursor: pointer;
-            transition: box-shadow 0.2s, border-color 0.2s;
-            font-size: 9px;
-            font-weight: 500;
-            color: white;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+
+        .filter-section-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 3px;
-            line-height: 1.1;
+            justify-content: space-between;
+            margin-bottom: 8px;
         }
-        
-        .emotion-btn.active {
+
+        .filter-section h3 {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #888;
+        }
+
+        .toggle-all-link {
+            font-size: 11px;
+            color: #aaa;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.15s;
+        }
+        .toggle-all-link:hover { color: #555; }
+
+        /* People chips */
+        .chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1.5px solid #e5e5e5;
+            background: #fff;
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+            user-select: none;
+        }
+        .chip:hover {
+            border-color: #ccc;
+            background: #f9f9f9;
+        }
+        .chip.active {
+            background: #1a1a1a;
+            border-color: #1a1a1a;
+            color: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+        }
+        .chip.active:hover {
+            background: #333;
             border-color: #333;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
         }
-        
-        .emotion-btn:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+
+        /* Dot inside chip (for person avatar) */
+        .chip-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.6;
+            flex-shrink: 0;
         }
-        
+
+        /* Emotion chips — pill with color swatch */
+        .emotion-chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .emotion-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1.5px solid #e5e5e5;
+            background: #fff;
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #555;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, opacity 0.15s;
+            user-select: none;
+        }
+        .emotion-chip:hover {
+            border-color: #ccc;
+            background: #f9f9f9;
+        }
+        .emotion-chip .swatch {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: opacity 0.15s;
+        }
+        .emotion-chip.active {
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+        }
+        .emotion-chip:not(.active) .swatch {
+            opacity: 0.5;
+        }
+        .emotion-chip:not(.active) {
+            color: #888;
+        }
+
+        /* Divider */
+        .sidebar-divider {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 12px 0;
+        }
+
         /* Stats */
         .stats {
-            background: #f9f9f9;
-            padding: 0.75rem;
-            border-radius: 6px;
+            background: #fafafa;
+            border: 1px solid #f0f0f0;
+            padding: 10px 12px;
+            border-radius: 8px;
             font-size: 11px;
-            color: #666;
+            color: #888;
+            line-height: 1.7;
+        }
+        .stats-count {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+            display: block;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+        .stats-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #bbb;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .stats-detail {
+            font-size: 11px;
+            color: #aaa;
             line-height: 1.6;
         }
-        
-        .stats strong {
-            color: #333;
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-        
-        .select-all-btn {
-            width: 100%;
-            padding: 0.4rem;
-            border: 1px solid #ddd;
-            background: #f9f9f9;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 10px;
-            color: #666;
-            margin-bottom: 0.5rem;
-            transition: background 0.2s, color 0.2s;
-            min-height: 26px;
-            line-height: 1;
-            white-space: nowrap;
-            overflow: hidden;
+
+        /* "No results" notice inside sidebar */
+        .no-results {
+            font-size: 11px;
+            color: #bbb;
+            text-align: center;
+            padding: 8px 0;
+            display: none;
         }
 
-        .select-all-btn:hover {
-            background: #eee;
-            color: #333;
-        }
-
-        /* Right counter */
+        /* ── Counter badge ───────────────────────────── */
         .counter {
             position: fixed;
             bottom: 20px;
             right: 20px;
             background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            font-size: 12px;
-            color: #666;
+            padding: 10px 14px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
+            font-size: 11px;
+            color: #888;
             z-index: 100;
+            text-align: center;
         }
-        
         .counter strong {
-            color: #333;
-            font-size: 18px;
+            color: #1a1a1a;
+            font-size: 20px;
             display: block;
+            line-height: 1.2;
         }
-        
-        /* Mapbox popup */
+
+        /* ── Mapbox popup ────────────────────────────── */
         .mapboxgl-popup-content {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            padding: 12px !important;
-            border-radius: 8px;
+            padding: 14px 16px !important;
+            border-radius: 10px !important;
             max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
         }
-        
+
         .mapboxgl-popup-content h3 {
-            margin: 0 0 0.5rem 0;
+            margin: 0 0 4px 0;
             font-size: 14px;
             font-weight: 600;
-            color: #222;
+            color: #1a1a1a;
         }
-        
+
         .mapboxgl-popup-content p {
             margin: 0 0 0.75rem 0;
             font-size: 12px;
-            line-height: 1.5;
-            color: #666;
+            line-height: 1.55;
+            color: #555;
         }
-        
+
         .mapboxgl-popup-content .person-name {
-            color: #999;
+            color: #aaa;
             font-size: 11px;
             font-weight: 500;
-            margin-bottom: 0.75rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }
-        
+
         .mapboxgl-popup-content .sensory {
-            background: #f5f5f5;
-            padding: 0.75rem;
-            border-radius: 4px;
+            background: #f7f7f7;
+            border: 1px solid #eee;
+            padding: 8px 10px;
+            border-radius: 6px;
             font-size: 11px;
-            color: #777;
-            margin: 0.75rem 0;
+            color: #888;
+            margin: 10px 0;
+            line-height: 1.5;
         }
-        
+
         .video-player {
             margin: 1rem 0 0 0;
             border-radius: 4px;
             overflow: hidden;
         }
-        
+
         .video-player iframe {
             width: 100%;
             height: 200px;
             border: none;
         }
-        
-        .video-note {
-            font-size: 10px;
-            color: #999;
-            font-style: italic;
-            margin-top: 0.5rem;
-        }
 
-        /* Floating video panel */
+        /* ── Floating video panel ────────────────────── */
         #video-panel {
             display: none;
             position: fixed;
@@ -310,14 +416,12 @@
             right: 32px;
             width: 480px;
             background: #111;
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
             z-index: 9999;
         }
-        #video-panel.visible {
-            display: block;
-        }
+        #video-panel.visible { display: block; }
         #video-panel-header {
             display: flex;
             align-items: center;
@@ -356,14 +460,15 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            margin-top: 0.75rem;
+            margin-top: 10px;
             padding: 6px 14px;
-            background: #222;
+            background: #1a1a1a;
             color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 12px;
             cursor: pointer;
+            transition: background 0.15s;
         }
         .play-video-btn:hover { background: #444; }
     </style>
@@ -386,37 +491,56 @@
 
 <!-- Left control panel -->
 <div class="controls hidden">
-    <button id="sidebar-close" onclick="toggleSidebar()" title="Kapat">✕</button>
-    <h1>Üsküdar Tanıklık Haritası</h1>
-    <p class="subtitle"></p>
-    
-    <!-- FILTER 1: PEOPLE -->
-    <div class="filter-section">
-        <h3>Kişiye Göre</h3>
-        <button class="select-all-btn" id="peopleToggleAll">Hiçbirini Seçme</button>
-        <div class="filter-options" id="peopleGrid"></div>
+    <div class="sidebar-header">
+        <div class="sidebar-top-row">
+            <div>
+                <h1>Üsküdar Tanıklık Haritası</h1>
+                <p class="subtitle">Kuzguncuk Sözlü Tarih Projesi</p>
+            </div>
+            <button id="sidebar-close" onclick="toggleSidebar()" title="Kapat">✕</button>
+        </div>
     </div>
 
-    <!-- FILTER 2: EMOTIONS -->
-    <div class="filter-section">
-        <h3>Duyguya Göre</h3>
-        <button class="select-all-btn" id="emotionToggleAll">Hiçbirini Seçme</button>
-        <div class="emotion-grid" id="emotionGrid"></div>
+    <div class="search-wrap">
+        <input type="text" id="storySearch" class="search-input" placeholder="Anılarda ara…">
     </div>
-    
-    <!-- STATS -->
-    <div class="stats">
-        <strong id="storyCount">Anılar yükleniyor...</strong>
-        <div id="activeFilters">Tüm kişiler ve duygular gösteriliyoruz</div>
+
+    <div class="sidebar-body">
+        <!-- FILTER 1: PEOPLE -->
+        <div class="filter-section">
+            <div class="filter-section-header">
+                <h3>Kişi</h3>
+                <button class="toggle-all-link" id="peopleToggleAll">Hiçbirini seçme</button>
+            </div>
+            <div class="chips-wrap" id="peopleGrid"></div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- FILTER 2: EMOTIONS -->
+        <div class="filter-section">
+            <div class="filter-section-header">
+                <h3>Duygu</h3>
+                <button class="toggle-all-link" id="emotionToggleAll">Hiçbirini seçme</button>
+            </div>
+            <div class="emotion-chips-wrap" id="emotionGrid"></div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- STATS -->
+        <div class="stats">
+            <span class="stats-count" id="storyCount">—</span>
+            <span class="stats-label">Görünen Anı</span>
+            <div class="stats-detail" id="activeFilters"></div>
+        </div>
     </div>
 </div>
 
 <!-- Right counter -->
 <div class="counter">
-    <div style="text-align: center;">
-        <div style="font-size: 11px; color: #999; margin-bottom: 0.25rem;">Görünen Anılar</div>
-        <strong id="markerCount">0</strong>
-    </div>
+    <strong id="markerCount">0</strong>
+    <div style="font-size: 10px; color: #bbb; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px;">Anı</div>
 </div>
 
 <!-- Mapbox GL JS Library -->
@@ -659,18 +783,29 @@
     
     map.on('load', () => {
         // ========================================
+        // SEARCH STATE
+        // ========================================
+
+        let searchQuery = '';
+
+        document.getElementById('storySearch').addEventListener('input', function() {
+            searchQuery = this.value.trim().toLowerCase();
+            updateMarkerVisibility();
+            updateStats();
+        });
+
+        // ========================================
         // BUILD PEOPLE FILTER
         // ========================================
-        
+
         function buildPeopleFilter() {
             const grid = document.getElementById('peopleGrid');
             grid.innerHTML = '';
             people.forEach(personName => {
                 const btn = document.createElement('button');
-                btn.className = 'filter-btn active';
-                btn.textContent = personName;
+                btn.className = 'chip active';
+                btn.innerHTML = `<span class="chip-dot"></span>${personName}`;
                 btn.dataset.person = personName;
-
                 btn.onclick = () => togglePerson(personName, btn);
                 grid.appendChild(btn);
             });
@@ -679,12 +814,12 @@
                 const allSelected = activePeople.size === people.length;
                 if (allSelected) {
                     activePeople.clear();
-                    grid.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    document.getElementById('peopleToggleAll').textContent = 'Hepsini Seç';
+                    grid.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+                    document.getElementById('peopleToggleAll').textContent = 'Hepsini seç';
                 } else {
                     people.forEach(p => activePeople.add(p));
-                    grid.querySelectorAll('.filter-btn').forEach(b => b.classList.add('active'));
-                    document.getElementById('peopleToggleAll').textContent = 'Hiçbirini Seçme';
+                    grid.querySelectorAll('.chip').forEach(b => b.classList.add('active'));
+                    document.getElementById('peopleToggleAll').textContent = 'Hiçbirini seçme';
                 }
                 updateMarkerVisibility();
                 updateStats();
@@ -700,27 +835,28 @@
                 btn.classList.add('active');
             }
             const allSelected = activePeople.size === people.length;
-            document.getElementById('peopleToggleAll').textContent = allSelected ? 'Hiçbirini Seçme' : 'Hepsini Seç';
+            document.getElementById('peopleToggleAll').textContent =
+                allSelected ? 'Hiçbirini seçme' : activePeople.size === 0 ? 'Hepsini seç' : 'Hepsini seç';
             updateMarkerVisibility();
             updateStats();
         }
-        
+
         // ========================================
         // BUILD EMOTION FILTER
         // ========================================
-        
+
         function buildEmotionFilter() {
             const grid = document.getElementById('emotionGrid');
             grid.innerHTML = '';
             const allEmotionKeys = Object.keys(emotionData);
+
             Object.entries(emotionData).forEach(([emotion, { hex, label }]) => {
                 const btn = document.createElement('button');
-                btn.className = 'emotion-btn active';
+                btn.className = 'emotion-chip active';
                 btn.style.backgroundColor = hex;
-                btn.innerHTML = label;
-                btn.title = emotion;
+                btn.style.borderColor = hex;
+                btn.innerHTML = `<span class="swatch" style="background:${hex};"></span>${label}`;
                 btn.dataset.emotion = emotion;
-
                 btn.onclick = () => toggleEmotion(emotion, btn);
                 grid.appendChild(btn);
             });
@@ -729,12 +865,21 @@
                 const allSelected = activeEmotions.size === allEmotionKeys.length;
                 if (allSelected) {
                     activeEmotions.clear();
-                    grid.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
-                    document.getElementById('emotionToggleAll').textContent = 'Hepsini Seç';
+                    grid.querySelectorAll('.emotion-chip').forEach(b => {
+                        b.classList.remove('active');
+                        b.style.backgroundColor = '';
+                        b.style.borderColor = '#e5e5e5';
+                    });
+                    document.getElementById('emotionToggleAll').textContent = 'Hepsini seç';
                 } else {
                     allEmotionKeys.forEach(e => activeEmotions.add(e));
-                    grid.querySelectorAll('.emotion-btn').forEach(b => b.classList.add('active'));
-                    document.getElementById('emotionToggleAll').textContent = 'Hiçbirini Seçme';
+                    grid.querySelectorAll('.emotion-chip').forEach(b => {
+                        const emo = b.dataset.emotion;
+                        b.classList.add('active');
+                        b.style.backgroundColor = emotionData[emo].hex;
+                        b.style.borderColor = emotionData[emo].hex;
+                    });
+                    document.getElementById('emotionToggleAll').textContent = 'Hiçbirini seçme';
                 }
                 updateMarkerVisibility();
                 updateStats();
@@ -745,41 +890,71 @@
             if (activeEmotions.has(emotion)) {
                 activeEmotions.delete(emotion);
                 btn.classList.remove('active');
+                btn.style.backgroundColor = '';
+                btn.style.borderColor = '#e5e5e5';
             } else {
                 activeEmotions.add(emotion);
                 btn.classList.add('active');
+                btn.style.backgroundColor = emotionData[emotion].hex;
+                btn.style.borderColor = emotionData[emotion].hex;
             }
             const allSelected = activeEmotions.size === Object.keys(emotionData).length;
-            document.getElementById('emotionToggleAll').textContent = allSelected ? 'Hiçbirini Seçme' : 'Hepsini Seç';
+            document.getElementById('emotionToggleAll').textContent =
+                allSelected ? 'Hiçbirini seçme' : 'Hepsini seç';
             updateMarkerVisibility();
             updateStats();
         }
-        
+
         // ========================================
         // UPDATE VISIBILITY
         // ========================================
-        
+
+        function storyMatchesSearch(story) {
+            if (!searchQuery) return true;
+            return (
+                story.title.toLowerCase().includes(searchQuery) ||
+                story.person.toLowerCase().includes(searchQuery) ||
+                story.narrative.toLowerCase().includes(searchQuery)
+            );
+        }
+
         function updateMarkerVisibility() {
             let visibleCount = 0;
             stories.forEach(story => {
-                const isVisible = activePeople.has(story.person) &&
-                    story.emotions.some(e => activeEmotions.has(e));
+                const isVisible =
+                    activePeople.has(story.person) &&
+                    story.emotions.some(e => activeEmotions.has(e)) &&
+                    storyMatchesSearch(story);
                 if (markerElements[story.id]) {
                     markerElements[story.id].style.display = isVisible ? 'block' : 'none';
                 }
                 if (isVisible) visibleCount++;
             });
             document.getElementById('markerCount').textContent = visibleCount;
+            document.getElementById('storyCount').textContent = visibleCount;
         }
-        
+
         function updateStats() {
-            const personList = Array.from(activePeople).join(', ');
-            const emotionList = Array.from(activeEmotions).map(e => emotionData[e].label).join(', ');
-            
-            document.getElementById('activeFilters').innerHTML = `
-                <strong style="font-size: 10px; color: #555;">Kişiler:</strong> ${personList || 'Hiçbiri'}<br>
-                <strong style="font-size: 10px; color: #555;">Duygular:</strong> ${emotionList || 'Hiçbiri'}
-            `;
+            const personCount = activePeople.size;
+            const totalPeople = people.length;
+            const emotionCount = activeEmotions.size;
+            const totalEmotions = Object.keys(emotionData).length;
+
+            const parts = [];
+            if (personCount < totalPeople) {
+                parts.push(`${personCount}/${totalPeople} kişi`);
+            } else {
+                parts.push('Tüm kişiler');
+            }
+            if (emotionCount < totalEmotions) {
+                parts.push(`${emotionCount}/${totalEmotions} duygu`);
+            } else {
+                parts.push('tüm duygular');
+            }
+            if (searchQuery) {
+                parts.push(`"${searchQuery}" araması`);
+            }
+            document.getElementById('activeFilters').textContent = parts.join(' · ');
         }
         
         // ========================================
@@ -1033,8 +1208,8 @@
         // Initialize filters
         buildPeopleFilter();
         buildEmotionFilter();
-        updateStats();
         updateMarkerVisibility();
+        updateStats();
     });
     
     map.on('error', (e) => {
