@@ -241,14 +241,15 @@
 
         /* Emotion chips — pill with color swatch */
         .emotion-chips-wrap {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 6px;
         }
 
         .emotion-chip {
-            display: inline-flex;
+            display: flex;
             align-items: center;
+            justify-content: center;
             gap: 5px;
             padding: 4px 10px;
             border-radius: 20px;
