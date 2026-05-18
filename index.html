@@ -697,6 +697,51 @@
             border-radius: 50%;
             flex-shrink: 0;
         }
+
+        /* ── Story management modal ─────────────── */
+        .mgmt-tabs {
+            display: flex;
+            border-bottom: 1.5px solid #f0f0f0;
+            margin-bottom: 12px;
+        }
+        .mgmt-tab {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 6px 14px;
+            font-size: 12px;
+            color: #aaa;
+            cursor: pointer;
+            margin-bottom: -2px;
+            font-weight: 500;
+        }
+        .mgmt-tab.active { color: #1a1a1a; font-weight: 700; border-bottom-color: #1a1a1a; }
+        .mgmt-search-row { display: flex; gap: 6px; margin-bottom: 8px; }
+        .mgmt-search-row input { flex: 1; }
+        .mgmt-story-list { border: 1px solid #eee; border-radius: 7px; overflow: hidden; max-height: 260px; overflow-y: auto; }
+        .mgmt-story-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #f5f5f5; font-size: 11px; }
+        .mgmt-story-row:last-child { border-bottom: none; }
+        .mgmt-story-info { flex: 1; min-width: 0; }
+        .mgmt-story-info strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mgmt-story-info span { font-size: 10px; color: #bbb; }
+        .mgmt-story-actions { display: flex; gap: 4px; flex-shrink: 0; }
+        .mgmt-btn-edit { background: #f4f4f4; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer; }
+        .mgmt-btn-del  { background: #fff0f0; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; color: #e74c3c; cursor: pointer; }
+        .mgmt-count { font-size: 10px; color: #bbb; margin-top: 5px; }
+        .mgmt-back-btn { background: none; border: none; font-size: 11px; color: #888; cursor: pointer; padding: 0; margin-bottom: 10px; }
+        .mgmt-back-btn:hover { color: #1a1a1a; }
+        /* Bulk add */
+        .bulk-person-row { display: flex; align-items: center; gap: 8px; background: #fffbf0; border: 1px solid #ffe4a0; border-radius: 7px; padding: 8px 10px; margin-bottom: 10px; }
+        .bulk-person-hint { font-size: 9px; color: #bbb; white-space: nowrap; }
+        .bulk-card { border: 1px solid #e8e8e8; border-radius: 7px; padding: 10px; background: #fff; margin-bottom: 8px; position: relative; }
+        .bulk-card-num { font-size: 9px; font-weight: 700; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .bulk-remove-btn { position: absolute; top: 8px; right: 8px; background: none; border: none; color: #ddd; font-size: 14px; cursor: pointer; line-height: 1; }
+        .bulk-remove-btn:hover { color: #e74c3c; }
+        .bulk-add-card-btn { width: 100%; border: 1.5px dashed #ddd; border-radius: 7px; padding: 8px; background: #fafafa; color: #bbb; font-size: 11px; cursor: pointer; margin-bottom: 8px; }
+        .bulk-add-card-btn:hover { border-color: #aaa; color: #888; }
+        .bulk-save-btn { width: 100%; }
+        .modal-input { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; margin-bottom: 4px; font-family: inherit; box-sizing: border-box; }
+        .modal-textarea { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; height: 80px; resize: vertical; font-family: inherit; box-sizing: border-box; margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -791,46 +836,104 @@
     </div>
 </div>
 
-<!-- Add story modal -->
-<div class="modal-overlay" id="add-story-overlay">
-    <div class="modal-box">
-        <h2>Yeni Tanıklık Ekle</h2>
+<!-- Story management modal -->
+<div class="modal-overlay" id="story-mgmt-overlay">
+    <div class="modal-box" style="max-height:90vh;overflow-y:auto;width:420px">
 
-        <span class="modal-field-label">Ad / Takma Ad *</span>
-        <input type="text" id="ns-person" placeholder="Örn: Interviewee 5">
+        <h2 data-i18n="modalTitle">Tanıklık Yönetimi</h2>
 
-        <span class="modal-field-label">Başlık *</span>
-        <input type="text" id="ns-title" placeholder="Anının başlığı">
-
-        <span class="modal-field-label">Anlatı *</span>
-        <textarea id="ns-narrative" placeholder="Sözlü tarih metni…"></textarea>
-
-        <span class="modal-field-label">Duyular</span>
-        <input type="text" id="ns-sensory" placeholder="Sesler, kokular, dokular…">
-
-        <span class="modal-field-label">Konum *</span>
-        <div class="coord-row">
-            <div><input type="number" id="ns-lat" step="0.00001" placeholder="Enlem: 41.0285"></div>
-            <div><input type="number" id="ns-lng" step="0.00001" placeholder="Boylam: 29.0330"></div>
-        </div>
-        <div class="inline-check">
-            <input type="checkbox" id="ns-unknown-location">
-            <label for="ns-unknown-location">Konum yaklaşık / belirsiz</label>
+        <!-- Tabs -->
+        <div class="mgmt-tabs">
+            <button class="mgmt-tab active" id="tab-stories" onclick="switchMgmtTab('stories')"
+                data-i18n="tabStories">Tanıklıklar</button>
+            <button class="mgmt-tab" id="tab-bulk" onclick="switchMgmtTab('bulk')"
+                data-i18n="tabBulk">Toplu Ekle</button>
         </div>
 
-        <span class="modal-field-label">Duygular * (en az biri)</span>
-        <div class="emotion-check-grid" id="ns-emotion-checkboxes"></div>
+        <!-- ── TAB 1: Stories list + edit ── -->
+        <div id="mgmt-stories-pane">
 
-        <span class="modal-field-label">YouTube Embed URL (isteğe bağlı)</span>
-        <input type="text" id="ns-video" placeholder="https://www.youtube-nocookie.com/embed/…">
+            <!-- List view -->
+            <div id="mgmt-list-view">
+                <div class="mgmt-search-row">
+                    <input type="text" id="mgmt-search"
+                        data-i18n-placeholder="searchPlaceholder"
+                        placeholder="Ara…"
+                        oninput="renderStoryList()">
+                    <select id="mgmt-person-filter" onchange="renderStoryList()">
+                        <option value="" data-i18n="filterAll">Tümü</option>
+                    </select>
+                </div>
+                <div class="mgmt-story-list" id="mgmt-story-list"></div>
+                <div class="mgmt-count" id="mgmt-count"></div>
+            </div>
 
-        <div class="modal-error" id="story-error">Lütfen zorunlu (*) alanları doldurun ve en az bir duygu seçin.</div>
-        <div class="modal-actions">
-            <button class="btn-secondary" onclick="closeAddStory()">İptal</button>
-            <button class="btn-primary" onclick="submitNewStory()">Haritaya Ekle</button>
+            <!-- Edit view (hidden by default) -->
+            <div id="mgmt-edit-view" style="display:none">
+                <button class="mgmt-back-btn" onclick="showListView()"
+                    data-i18n="backBtn">← Listeye dön</button>
+
+                <span class="modal-field-label" data-i18n="personLabel">Kişi</span>
+                <input type="text" id="edit-person" class="modal-input">
+
+                <span class="modal-field-label" data-i18n="titleLabel">Başlık *</span>
+                <input type="text" id="edit-title" class="modal-input">
+
+                <span class="modal-field-label" data-i18n="narrativeLabel">Anlatı *</span>
+                <textarea id="edit-narrative" class="modal-textarea"></textarea>
+
+                <span class="modal-field-label" data-i18n="periodLabel">Dönem (isteğe bağlı)</span>
+                <input type="text" id="edit-period" class="modal-input"
+                    data-i18n-placeholder="periodPlaceholder" placeholder="1980ler, Çocukluk…">
+
+                <span class="modal-field-label">Konum *</span>
+                <div class="coord-row">
+                    <div><input type="number" id="edit-lat" step="0.00001"
+                        data-i18n-placeholder="latLabel" placeholder="Enlem"></div>
+                    <div><input type="number" id="edit-lng" step="0.00001"
+                        data-i18n-placeholder="lngLabel" placeholder="Boylam"></div>
+                </div>
+
+                <div class="inline-check" style="margin-top:8px">
+                    <input type="checkbox" id="edit-ghost">
+                    <label for="edit-ghost" data-i18n="ghostLabel">Mevcut değil</label>
+                </div>
+
+                <span class="modal-field-label" data-i18n="emotionLabel">Duygular *</span>
+                <div class="emotion-check-grid" id="edit-emotion-checkboxes"></div>
+
+                <span class="modal-field-label" data-i18n="videoLabel">YouTube URL (isteğe bağlı)</span>
+                <input type="text" id="edit-video" class="modal-input">
+
+                <div class="modal-error" id="edit-error" style="display:none"
+                    data-i18n="errorRequired">Zorunlu alanları doldurun.</div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="showListView()"
+                        data-i18n="cancelBtn">İptal</button>
+                    <button class="btn-primary" onclick="saveEditedStory()"
+                        data-i18n="saveBtn">Değişiklikleri Kaydet</button>
+                </div>
+            </div>
         </div>
 
-        <div id="admin-existing-stories"></div>
+        <!-- ── TAB 2: Bulk Add ── -->
+        <div id="mgmt-bulk-pane" style="display:none">
+            <div class="bulk-person-row">
+                <label data-i18n="bulkPersonLabel">Görüşmeci:</label>
+                <input type="text" id="bulk-person" class="modal-input" style="flex:1">
+                <span class="bulk-person-hint" data-i18n="bulkPersonHint">← tüm kartlara uygulanır</span>
+            </div>
+            <div id="bulk-cards"></div>
+            <button class="bulk-add-card-btn" onclick="addBulkCard()"
+                data-i18n="addCardBtn">+ Tanıklık ekle</button>
+            <button class="btn-primary bulk-save-btn" id="bulk-save-btn"
+                onclick="saveBulkStories()">Tümünü Kaydet</button>
+        </div>
+
+        <div class="modal-actions" style="margin-top:12px;border-top:1px solid #f0f0f0;padding-top:12px">
+            <button class="btn-secondary" onclick="closeStoryManagement()"
+                data-i18n="cancelBtn">İptal</button>
+        </div>
     </div>
 </div>
 
