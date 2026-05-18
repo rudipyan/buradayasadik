@@ -1281,8 +1281,12 @@
             window._mapApi.buildPeopleFilter();
             window._mapApi.buildEmotionFilter();
         }
-        // renderStoryList is defined in admin functions (Task 9) — guard until available
+        // renderStoryList is defined in admin functions — guard until available
         if (typeof renderStoryList === 'function') renderStoryList();
+
+        // Close any open popups — they contain translated strings (watchBtn, popupPeriod)
+        // that would be stale. User reopens to get the new language.
+        document.querySelectorAll('.mapboxgl-popup').forEach(p => p.remove());
     }
     window.applyLang = applyLang;
 
@@ -1683,6 +1687,12 @@
 
             // Initial static render
             tick();
+
+            // Expose cancel so callers can stop the loop when removing the marker
+            canvas.destroyAnim = () => {
+                if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            };
+
             return canvas;
         }
 
@@ -1910,8 +1920,24 @@
         }));
         localStorage.setItem('uskudar-stories', JSON.stringify(seeded));
         localStorage.setItem('uskudar-seeded', '1');
-        // Reload so the seeded data drives the map
-        location.reload();
+
+        // Re-initialise in place — no hard reload needed
+        stories.length = 0;
+        seeded.forEach(s => stories.push(s));
+        // Remove existing markers
+        Object.keys(markerObjects).forEach(id => {
+            destroyMarkerAnim(Number(id));
+            markerObjects[id].remove();
+            delete markerObjects[id];
+            delete markerElements[id];
+        });
+        // Re-add all markers from seeded data
+        stories.forEach(s => addMarkerForStory(s));
+        if (window._mapApi) {
+            window._mapApi.buildPeopleFilter();
+            window._mapApi.buildEmotionFilter();
+        }
+        if (window._mapApi) window._mapApi.updateMarkerVisibility();
     }
 
     const ADMIN_CREDS = { username: 'admin', password: 'uskudar2025' };
@@ -2075,6 +2101,7 @@
 
         // Rebuild the map marker
         if (markerObjects[editingStoryId]) {
+            destroyMarkerAnim(editingStoryId);
             markerObjects[editingStoryId].remove();
             delete markerObjects[editingStoryId];
             delete markerElements[editingStoryId];
@@ -2091,6 +2118,14 @@
         renderStoryList();
     }
 
+    function destroyMarkerAnim(id) {
+        const inner = markerElements[id];
+        if (inner) {
+            const canvas = inner.querySelector('canvas');
+            if (canvas?.destroyAnim) canvas.destroyAnim();
+        }
+    }
+
     function deleteStory(id) {
         if (!confirm('Bu tanıklığı silmek istediğinize emin misiniz?')) return;
         const idx = stories.findIndex(s => s.id === id);
@@ -2098,6 +2133,7 @@
         stories.splice(idx, 1);
         saveStories();
         if (markerObjects[id]) {
+            destroyMarkerAnim(id);
             markerObjects[id].remove();
             delete markerObjects[id];
             delete markerElements[id];
