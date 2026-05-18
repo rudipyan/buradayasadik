@@ -1966,7 +1966,7 @@
         const p = document.getElementById('admin-password').value;
         if (u === ADMIN_CREDS.username && p === ADMIN_CREDS.password) {
             closeAdminLogin();
-            openAddStory();
+            openStoryManagement();
         } else {
             document.getElementById('admin-error').style.display = 'block';
         }
@@ -2142,7 +2142,7 @@
 
     // Ctrl+Shift+A → admin login (hidden from public view)
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { closeAdminLogin(); closeAddStory(); }
+        if (e.key === 'Escape') { closeAdminLogin(); closeStoryManagement(); }
         if (e.ctrlKey && e.shiftKey && e.key === 'A') { e.preventDefault(); openAdminLogin(); }
     });
     document.getElementById('admin-password').addEventListener('keydown', e => {
