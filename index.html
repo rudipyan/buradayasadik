@@ -1972,124 +1972,172 @@
         }
     }
 
-    function openAddStory() {
-        const wrap = document.getElementById('ns-emotion-checkboxes');
+    // ── Story Management ──────────────────────
+    let editingStoryId = null;
+
+    function openStoryManagement() {
+        populatePersonFilter();
+        renderStoryList();
+        switchMgmtTab('stories');
+        showListView();
+        document.getElementById('story-mgmt-overlay').classList.add('visible');
+        applyLang(currentLang);
+    }
+
+    function closeStoryManagement() {
+        document.getElementById('story-mgmt-overlay').classList.remove('visible');
+        editingStoryId = null;
+    }
+
+    function switchMgmtTab(tab) {
+        document.getElementById('mgmt-stories-pane').style.display = tab === 'stories' ? '' : 'none';
+        document.getElementById('mgmt-bulk-pane').style.display    = tab === 'bulk'    ? '' : 'none';
+        document.getElementById('tab-stories').classList.toggle('active', tab === 'stories');
+        document.getElementById('tab-bulk').classList.toggle('active', tab === 'bulk');
+        if (tab === 'bulk' && document.getElementById('bulk-cards').children.length === 0) {
+            addBulkCard();
+        }
+    }
+
+    function populatePersonFilter() {
+        const sel = document.getElementById('mgmt-person-filter');
+        const unique = [...new Set(stories.map(s => s.person))].sort();
+        sel.innerHTML = `<option value="">${t('filterAll')}</option>` +
+            unique.map(p => `<option value="${p}">${p}</option>`).join('');
+    }
+
+    function renderStoryList() {
+        const query  = (document.getElementById('mgmt-search')?.value || '').toLowerCase();
+        const person = document.getElementById('mgmt-person-filter')?.value || '';
+        const list   = document.getElementById('mgmt-story-list');
+        const count  = document.getElementById('mgmt-count');
+        if (!list) return;
+
+        const filtered = stories.filter(s =>
+            (!person || s.person === person) &&
+            (!query  || s.title.toLowerCase().includes(query) || s.person.toLowerCase().includes(query))
+        );
+
+        list.innerHTML = filtered.length === 0
+            ? `<div style="padding:12px;text-align:center;color:#bbb;font-size:11px">—</div>`
+            : filtered.map(s => `
+                <div class="mgmt-story-row">
+                    <div class="mgmt-story-info">
+                        <strong>${s.title}${s.isGhost ? ' 👻' : ''}</strong>
+                        <span>· ${s.person}</span>
+                    </div>
+                    <div class="mgmt-story-actions">
+                        <button class="mgmt-btn-edit" onclick="openEditView(${s.id})">${t('editBtn')}</button>
+                        <button class="mgmt-btn-del"  onclick="deleteStory(${s.id})">${t('deleteBtn')}</button>
+                    </div>
+                </div>`
+            ).join('');
+
+        if (count) count.textContent = t('storyCount')(filtered.length);
+    }
+
+    function showListView() {
+        document.getElementById('mgmt-list-view').style.display = '';
+        document.getElementById('mgmt-edit-view').style.display = 'none';
+        editingStoryId = null;
+    }
+
+    function openEditView(id) {
+        const story = stories.find(s => s.id === id);
+        if (!story) return;
+        editingStoryId = id;
+
+        document.getElementById('edit-person').value    = story.person;
+        document.getElementById('edit-title').value     = story.title;
+        document.getElementById('edit-narrative').value = story.narrative;
+        document.getElementById('edit-period').value    = story.period || '';
+        document.getElementById('edit-lat').value       = story.lat;
+        document.getElementById('edit-lng').value       = story.lng;
+        document.getElementById('edit-ghost').checked   = !!story.isGhost;
+        document.getElementById('edit-video').value     = story.videoUrl || '';
+        document.getElementById('edit-error').style.display = 'none';
+
+        // Build emotion checkboxes
+        const wrap = document.getElementById('edit-emotion-checkboxes');
         wrap.innerHTML = '';
-        Object.entries(emotionData).forEach(([key, { hex, label }]) => {
+        Object.entries(emotionData).forEach(([key, {hex, label}]) => {
+            const cb  = document.createElement('input');
+            cb.type   = 'checkbox';
+            cb.value  = key;
+            cb.id     = `edit-em-${key}`;
+            cb.checked = story.emotions.includes(key);
             const lbl = document.createElement('label');
-            lbl.dataset.emotion = key;
-            const cb = document.createElement('input');
-            cb.type = 'checkbox'; cb.value = key;
-            const swatch = document.createElement('span');
-            swatch.style.cssText = `width:8px;height:8px;border-radius:50%;background:${hex};display:inline-block;`;
-            lbl.appendChild(cb); lbl.appendChild(swatch);
-            lbl.appendChild(document.createTextNode(' ' + label));
+            lbl.htmlFor = cb.id;
+            lbl.textContent = ' ' + label;
+            lbl.className = 'emotion-check-label' + (cb.checked ? ' checked' : '');
+            if (cb.checked) { lbl.style.backgroundColor = hex; lbl.style.borderColor = hex; }
             cb.addEventListener('change', () => {
                 lbl.classList.toggle('checked', cb.checked);
                 lbl.style.backgroundColor = cb.checked ? hex : '';
-                lbl.style.borderColor = cb.checked ? hex : '';
+                lbl.style.borderColor     = cb.checked ? hex : '';
             });
+            wrap.appendChild(cb);
             wrap.appendChild(lbl);
         });
 
-        const saved = JSON.parse(localStorage.getItem('uskudar-stories') || '[]');
-        const listEl = document.getElementById('admin-existing-stories');
-        if (saved.length > 0) {
-            listEl.innerHTML = `<p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#888;margin:20px 0 8px 0;">Daha önce eklenenler</p>`;
-            saved.forEach(s => {
-                const row = document.createElement('div');
-                row.className = 'admin-story-row';
-                row.innerHTML = `<span>${s.title} <em style="color:#bbb">(${s.person})</em></span>`;
-                const del = document.createElement('button');
-                del.textContent = '× Sil';
-                del.onclick = () => deleteStoredStory(s.id, row);
-                row.appendChild(del);
-                listEl.appendChild(row);
-            });
-        } else {
-            listEl.innerHTML = '';
-        }
-
-        document.getElementById('add-story-overlay').classList.add('visible');
+        document.getElementById('mgmt-list-view').style.display = 'none';
+        document.getElementById('mgmt-edit-view').style.display = '';
     }
 
-    function closeAddStory() {
-        document.getElementById('add-story-overlay').classList.remove('visible');
-        document.getElementById('story-error').style.display = 'none';
-        ['ns-person','ns-title','ns-narrative','ns-sensory','ns-lat','ns-lng','ns-video']
-            .forEach(id => { document.getElementById(id).value = ''; });
-        document.getElementById('ns-unknown-location').checked = false;
-    }
-
-    function submitNewStory() {
-        const person    = document.getElementById('ns-person').value.trim();
-        const title     = document.getElementById('ns-title').value.trim();
-        const narrative = document.getElementById('ns-narrative').value.trim();
-        const sensory   = document.getElementById('ns-sensory').value.trim();
-        const lat       = parseFloat(document.getElementById('ns-lat').value);
-        const lng       = parseFloat(document.getElementById('ns-lng').value);
-        const unknownLoc = document.getElementById('ns-unknown-location').checked;
-        const videoUrl  = document.getElementById('ns-video').value.trim();
-        const emotions  = [...document.querySelectorAll('#ns-emotion-checkboxes input:checked')]
+    function saveEditedStory() {
+        const person    = document.getElementById('edit-person').value.trim();
+        const title     = document.getElementById('edit-title').value.trim();
+        const narrative = document.getElementById('edit-narrative').value.trim();
+        const period    = document.getElementById('edit-period').value.trim();
+        const lat       = parseFloat(document.getElementById('edit-lat').value);
+        const lng       = parseFloat(document.getElementById('edit-lng').value);
+        const isGhost   = document.getElementById('edit-ghost').checked;
+        const videoUrl  = document.getElementById('edit-video').value.trim();
+        const emotions  = [...document.querySelectorAll('#edit-emotion-checkboxes input:checked')]
                             .map(i => i.value);
 
         if (!person || !title || !narrative || isNaN(lat) || isNaN(lng) || emotions.length === 0) {
-            document.getElementById('story-error').style.display = 'block';
+            document.getElementById('edit-error').style.display = 'block';
             return;
         }
 
-        const newStory = {
-            id: Date.now(), person, title, lat, lng,
-            narrative, sensory: sensory || 'TBF', emotions,
-            ...(unknownLoc && { locationKnown: false }),
-            ...(videoUrl   && { videoUrl }),
-        };
+        const idx = stories.findIndex(s => s.id === editingStoryId);
+        if (idx === -1) return;
 
-        const saved = JSON.parse(localStorage.getItem('uskudar-stories') || '[]');
-        saved.push(newStory);
-        localStorage.setItem('uskudar-stories', JSON.stringify(saved));
+        stories[idx] = { ...stories[idx], person, title, narrative, period, lat, lng, isGhost, emotions, videoUrl };
+        saveStories();
 
-        stories.push(newStory);
+        // Rebuild the map marker
+        if (markerObjects[editingStoryId]) {
+            markerObjects[editingStoryId].remove();
+            delete markerObjects[editingStoryId];
+            delete markerElements[editingStoryId];
+        }
+        addMarkerForStory(stories[idx]);
+
+        // Update people list if new person name
         if (!people.includes(person)) people.push(person);
-        activePeople.add(person);
-
         if (window._mapApi) {
-            window._mapApi.addMarkerForStory(newStory);
             window._mapApi.buildPeopleFilter();
-            window._mapApi.updateMarkerVisibility();
-            window._mapApi.updateStats();
         }
-
-        closeAddStory();
-
-        let toast = document.getElementById('coord-toast');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'coord-toast';
-            Object.assign(toast.style, {
-                position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
-                background: 'rgba(0,0,0,0.82)', color: '#fff', padding: '10px 18px',
-                borderRadius: '8px', fontFamily: 'monospace', fontSize: '13px',
-                whiteSpace: 'pre', zIndex: 9999, pointerEvents: 'none',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.4)', transition: 'opacity 0.3s'
-            });
-            document.body.appendChild(toast);
-        }
-        toast.textContent = `✓ "${title}" haritaya eklendi`;
-        toast.style.opacity = '1';
-        clearTimeout(toast._timer);
-        toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3500);
+        updateMarkerVisibility();
+        showListView();
+        renderStoryList();
     }
 
-    function deleteStoredStory(id, rowEl) {
-        if (!confirm('Bu tanıklık kalıcı olarak silinecek. Emin misiniz?')) return;
-        const saved = JSON.parse(localStorage.getItem('uskudar-stories') || '[]');
-        localStorage.setItem('uskudar-stories', JSON.stringify(saved.filter(s => s.id !== id)));
-        if (markerObjects[id]) { markerObjects[id].remove(); delete markerObjects[id]; delete markerElements[id]; }
+    function deleteStory(id) {
+        if (!confirm('Bu tanıklığı silmek istediğinize emin misiniz?')) return;
         const idx = stories.findIndex(s => s.id === id);
-        if (idx !== -1) stories.splice(idx, 1);
-        if (window._mapApi) { window._mapApi.updateMarkerVisibility(); window._mapApi.updateStats(); }
-        rowEl.remove();
+        if (idx === -1) return;
+        stories.splice(idx, 1);
+        saveStories();
+        if (markerObjects[id]) {
+            markerObjects[id].remove();
+            delete markerObjects[id];
+            delete markerElements[id];
+        }
+        renderStoryList();
+        updateStats();
     }
 
     // Ctrl+Shift+A → admin login (hidden from public view)
