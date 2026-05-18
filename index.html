@@ -1966,6 +1966,7 @@
         const p = document.getElementById('admin-password').value;
         if (u === ADMIN_CREDS.username && p === ADMIN_CREDS.password) {
             closeAdminLogin();
+            seedStoriesFromHardcoded(); // seeds and reloads on first run; no-op after
             openStoryManagement();
         } else {
             document.getElementById('admin-error').style.display = 'block';
