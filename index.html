@@ -644,7 +644,7 @@
     <div class="sidebar-header">
         <div class="sidebar-top-row">
             <div>
-                <h1>Üsküdar Tanıklık Haritası</h1>
+                <h1 data-i18n="panelTitle">Üsküdar Tanıklık Haritası</h1>
                 <p class="subtitle">Kuzguncuk Sözlü Tarih Projesi</p>
             </div>
             <button id="sidebar-close" onclick="toggleSidebar()" title="Kapat">✕</button>
@@ -659,8 +659,8 @@
         <!-- FILTER 1: PEOPLE -->
         <div class="filter-section">
             <div class="filter-section-header">
-                <h3>Kişi</h3>
-                <button class="toggle-all-link" id="peopleToggleAll">Hiçbirini seçme</button>
+                <h3 data-i18n="peopleHeader">Kişi</h3>
+                <button class="toggle-all-link" id="peopleToggleAll" data-i18n="toggleNone">Hiçbirini seçme</button>
             </div>
             <div class="chips-wrap" id="peopleGrid"></div>
         </div>
@@ -670,8 +670,8 @@
         <!-- FILTER 2: EMOTIONS -->
         <div class="filter-section">
             <div class="filter-section-header">
-                <h3>Duygu</h3>
-                <button class="toggle-all-link" id="emotionToggleAll">Hiçbirini seçme</button>
+                <h3 data-i18n="emotionsHeader">Duygu</h3>
+                <button class="toggle-all-link" id="emotionToggleAll" data-i18n="toggleNone">Hiçbirini seçme</button>
             </div>
             <div class="emotion-chips-wrap" id="emotionGrid"></div>
         </div>
@@ -696,15 +696,15 @@
 <!-- Admin login modal -->
 <div class="modal-overlay" id="admin-login-overlay">
     <div class="modal-box">
-        <h2>Yönetici Girişi</h2>
-        <span class="modal-field-label">Kullanıcı Adı</span>
+        <h2 data-i18n="adminLoginTitle">Yönetici Girişi</h2>
+        <span class="modal-field-label" data-i18n="adminUser">Kullanıcı Adı</span>
         <input type="text" id="admin-username" autocomplete="off" placeholder="admin">
-        <span class="modal-field-label">Şifre</span>
+        <span class="modal-field-label" data-i18n="adminPass">Şifre</span>
         <input type="password" id="admin-password" placeholder="••••••••">
-        <div class="modal-error" id="admin-error">Kullanıcı adı veya şifre hatalı.</div>
+        <div class="modal-error" id="admin-error" data-i18n="adminError">Kullanıcı adı veya şifre hatalı.</div>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeAdminLogin()">İptal</button>
-            <button class="btn-primary" onclick="submitAdminLogin()">Giriş</button>
+            <button class="btn-primary" onclick="submitAdminLogin()" data-i18n="adminLoginBtn">Giriş</button>
         </div>
     </div>
 </div>
