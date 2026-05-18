@@ -1686,8 +1686,14 @@
                 const bias = parseFloat(sessionStorage.getItem('ghostBias'));
                 const markerPhase = Math.random();
 
-                canvas.style.transition = 'opacity 1.8s ease';
-                canvas.style.opacity    = '0';
+                // Start invisible; snap without transition on zoom-rebuild if already visible
+                canvas.style.transition = 'none';
+                canvas.style.opacity    = ghostAlreadyVisible ? '1' : '0';
+                canvas._ghostVisible    = !!ghostAlreadyVisible;
+                // Re-enable transition after the initial paint so future fades work
+                requestAnimationFrame(() => {
+                    canvas.style.transition = 'opacity 1.8s ease';
+                });
 
                 function scheduleGhost() {
                     if (caught) return;
@@ -1706,7 +1712,7 @@
                 }
 
                 if (ghostAlreadyVisible) {
-                    // Zoom rebuild mid-cycle: resume as visible immediately, no restart
+                    // Zoom rebuild: already visible, just schedule the next hide
                     scheduleGhost();
                 } else {
                     // First appearance: 1–6 s staggered so markers don't all pop at once
