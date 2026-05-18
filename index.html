@@ -670,6 +670,33 @@
         .lang-option:hover {
             color: #1a1a1a;
         }
+        /* ── Map legend ─────────────────────────── */
+        #map-legend {
+            position: absolute;
+            bottom: 28px;
+            left: 10px;
+            z-index: 5;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 10px;
+            color: #555;
+            pointer-events: none;
+        }
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 4px;
+        }
+        .legend-row:last-child { margin-bottom: 0; }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -1751,6 +1778,21 @@
 
         // Expose API for admin panel (add markers after map load)
         window._mapApi = { addMarkerForStory, buildPeopleFilter, buildEmotionFilter, updateMarkerVisibility, updateStats };
+
+        // Map legend
+        const legend = document.createElement('div');
+        legend.id = 'map-legend';
+        legend.innerHTML = `
+            <div class="legend-row">
+                <div class="legend-dot" style="background:#4A90E2"></div>
+                <span data-i18n="legendActive">${t('legendActive')}</span>
+            </div>
+            <div class="legend-row">
+                <div class="legend-dot" style="background:rgba(100,105,130,0.3);border:1.5px solid rgba(100,105,130,0.4)"></div>
+                <span data-i18n="legendGhost">${t('legendGhost')}</span>
+            </div>
+        `;
+        document.getElementById('map').appendChild(legend);
     });
     
     map.on('error', (e) => {
