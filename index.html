@@ -455,7 +455,146 @@
             border: none;
         }
 
-        /* Play video button inside popup */
+        /* ── Admin panel ─────────────────────────────── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 9998;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.visible { display: flex; }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+            padding: 24px;
+            width: 440px;
+            max-width: calc(100vw - 40px);
+            max-height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+        .modal-box h2 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0 0 16px 0;
+        }
+        .modal-field-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            margin: 14px 0 4px 0;
+        }
+        .modal-box input[type="text"],
+        .modal-box input[type="password"],
+        .modal-box input[type="number"],
+        .modal-box textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #333;
+            outline: none;
+            transition: border-color 0.15s;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .modal-box input:focus, .modal-box textarea:focus { border-color: #bbb; }
+        .modal-box textarea { min-height: 80px; resize: vertical; }
+        .modal-error {
+            font-size: 12px;
+            color: #e74c3c;
+            margin-top: 8px;
+            display: none;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        .btn-primary {
+            padding: 8px 18px;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-primary:hover { background: #333; }
+        .btn-secondary {
+            padding: 8px 14px;
+            background: #f5f5f5;
+            color: #555;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-secondary:hover { background: #eee; }
+        .emotion-check-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .emotion-check-grid label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1.5px solid #e5e5e5;
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+            user-select: none;
+        }
+        .emotion-check-grid input[type="checkbox"] { display: none; }
+        .emotion-check-grid label.checked { color: #fff; border-color: transparent; }
+        .coord-row { display: flex; gap: 8px; }
+        .coord-row > div { flex: 1; }
+        .inline-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #555;
+            margin-top: 6px;
+        }
+        .inline-check input { width: auto; }
+        .admin-story-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 12px;
+        }
+        .admin-story-row span { color: #555; }
+        .admin-story-row button {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 6px;
+        }
+
+        /* ── Play video button inside popup ─────────── */
         .play-video-btn {
             display: inline-flex;
             align-items: center;
@@ -543,6 +682,68 @@
     <div style="font-size: 10px; color: #bbb; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px;">Anı</div>
 </div>
 
+<!-- Admin login modal -->
+<div class="modal-overlay" id="admin-login-overlay">
+    <div class="modal-box">
+        <h2>Yönetici Girişi</h2>
+        <span class="modal-field-label">Kullanıcı Adı</span>
+        <input type="text" id="admin-username" autocomplete="off" placeholder="admin">
+        <span class="modal-field-label">Şifre</span>
+        <input type="password" id="admin-password" placeholder="••••••••">
+        <div class="modal-error" id="admin-error">Kullanıcı adı veya şifre hatalı.</div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeAdminLogin()">İptal</button>
+            <button class="btn-primary" onclick="submitAdminLogin()">Giriş</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add story modal -->
+<div class="modal-overlay" id="add-story-overlay">
+    <div class="modal-box">
+        <h2>Yeni Tanıklık Ekle</h2>
+
+        <span class="modal-field-label">Ad / Takma Ad *</span>
+        <input type="text" id="ns-person" placeholder="Örn: Interviewee 5">
+
+        <span class="modal-field-label">Başlık *</span>
+        <input type="text" id="ns-title" placeholder="Anının başlığı">
+
+        <span class="modal-field-label">Anlatı *</span>
+        <textarea id="ns-narrative" placeholder="Sözlü tarih metni…"></textarea>
+
+        <span class="modal-field-label">Duyular</span>
+        <input type="text" id="ns-sensory" placeholder="Sesler, kokular, dokular…">
+
+        <span class="modal-field-label">Konum *</span>
+        <div class="coord-row">
+            <div><input type="number" id="ns-lat" step="0.00001" placeholder="Enlem: 41.0285"></div>
+            <div><input type="number" id="ns-lng" step="0.00001" placeholder="Boylam: 29.0330"></div>
+        </div>
+        <div class="inline-check">
+            <input type="checkbox" id="ns-unknown-location">
+            <label for="ns-unknown-location">Konum yaklaşık / belirsiz</label>
+        </div>
+
+        <span class="modal-field-label">Duygular * (en az biri)</span>
+        <div class="emotion-check-grid" id="ns-emotion-checkboxes"></div>
+
+        <span class="modal-field-label">YouTube Embed URL (isteğe bağlı)</span>
+        <input type="text" id="ns-video" placeholder="https://www.youtube-nocookie.com/embed/…">
+
+        <div class="modal-error" id="story-error">Lütfen zorunlu (*) alanları doldurun ve en az bir duygu seçin.</div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeAddStory()">İptal</button>
+            <button class="btn-primary" onclick="submitNewStory()">Haritaya Ekle</button>
+        </div>
+
+        <div id="admin-existing-stories"></div>
+    </div>
+</div>
+
+<!-- Local token (gitignored) — copy config.example.js → config.js and add your token -->
+<script src="config.js"></script>
+
 <!-- Mapbox GL JS Library -->
 <script src="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.js"></script>
 
@@ -551,7 +752,8 @@
     // CONFIGURATION
     // ========================================
     
-    mapboxgl.accessToken = 'pk.eyJ1IjoicnVkaXB5YW4iLCJhIjoiY21ueDY0c2cwMDE3MjJyc2NkamNhOGFjcSJ9.ZqMex6g_XLF9yX4kilbL7w';
+    // Token is loaded from config.js (gitignored). See config.example.js for setup.
+    mapboxgl.accessToken = window.MAPBOX_TOKEN || '';
     
     // Story data with people and emotions (emotions is an array — can have multiple)
     const stories = [
@@ -758,7 +960,18 @@
     
     // People names
     const people = ['Interviewee 1', 'Interviewee 2', 'Interviewee 3', 'Interviewee 4', 'Mikail'];
-    
+
+    // Load user-submitted stories from localStorage before map renders
+    (function loadStoredStories() {
+        const saved = JSON.parse(localStorage.getItem('uskudar-stories') || '[]');
+        saved.forEach(s => {
+            if (!stories.find(x => x.id === s.id)) {
+                stories.push(s);
+                if (!people.includes(s.person)) people.push(s.person);
+            }
+        });
+    })();
+
     // ========================================
     // STATE MANAGEMENT
     // ========================================
@@ -827,16 +1040,31 @@
         }
 
         function togglePerson(personName, btn) {
-            if (activePeople.has(personName)) {
-                activePeople.delete(personName);
-                btn.classList.remove('active');
-            } else {
-                activePeople.add(personName);
-                btn.classList.add('active');
-            }
+            const grid = document.getElementById('peopleGrid');
             const allSelected = activePeople.size === people.length;
+            const onlyThis = activePeople.size === 1 && activePeople.has(personName);
+
+            if (allSelected) {
+                // Isolate: show only this person
+                activePeople.clear();
+                activePeople.add(personName);
+                grid.querySelectorAll('.chip').forEach(b =>
+                    b.classList.toggle('active', b.dataset.person === personName));
+            } else if (onlyThis) {
+                // Already isolated — restore all
+                people.forEach(p => activePeople.add(p));
+                grid.querySelectorAll('.chip').forEach(b => b.classList.add('active'));
+            } else {
+                if (activePeople.has(personName)) {
+                    activePeople.delete(personName);
+                    btn.classList.remove('active');
+                } else {
+                    activePeople.add(personName);
+                    btn.classList.add('active');
+                }
+            }
             document.getElementById('peopleToggleAll').textContent =
-                allSelected ? 'Hiçbirini seçme' : activePeople.size === 0 ? 'Hepsini seç' : 'Hepsini seç';
+                activePeople.size === people.length ? 'Hiçbirini seçme' : 'Hepsini seç';
             updateMarkerVisibility();
             updateStats();
         }
@@ -887,20 +1115,39 @@
         }
 
         function toggleEmotion(emotion, btn) {
-            if (activeEmotions.has(emotion)) {
-                activeEmotions.delete(emotion);
-                btn.classList.remove('active');
-                btn.style.backgroundColor = '';
-                btn.style.borderColor = '#e5e5e5';
-            } else {
-                activeEmotions.add(emotion);
-                btn.classList.add('active');
-                btn.style.backgroundColor = emotionData[emotion].hex;
-                btn.style.borderColor = emotionData[emotion].hex;
+            const grid = document.getElementById('emotionGrid');
+            const allEmotionKeys = Object.keys(emotionData);
+            const allSelected = activeEmotions.size === allEmotionKeys.length;
+            const onlyThis = activeEmotions.size === 1 && activeEmotions.has(emotion);
+
+            function applyChip(b, active) {
+                const emo = b.dataset.emotion;
+                b.classList.toggle('active', active);
+                b.style.backgroundColor = active ? emotionData[emo].hex : '';
+                b.style.borderColor     = active ? emotionData[emo].hex : '#e5e5e5';
             }
-            const allSelected = activeEmotions.size === Object.keys(emotionData).length;
+
+            if (allSelected) {
+                // Isolate: show only this emotion
+                activeEmotions.clear();
+                activeEmotions.add(emotion);
+                grid.querySelectorAll('.emotion-chip').forEach(b =>
+                    applyChip(b, b.dataset.emotion === emotion));
+            } else if (onlyThis) {
+                // Already isolated — restore all
+                allEmotionKeys.forEach(e => activeEmotions.add(e));
+                grid.querySelectorAll('.emotion-chip').forEach(b => applyChip(b, true));
+            } else {
+                if (activeEmotions.has(emotion)) {
+                    activeEmotions.delete(emotion);
+                    applyChip(btn, false);
+                } else {
+                    activeEmotions.add(emotion);
+                    applyChip(btn, true);
+                }
+            }
             document.getElementById('emotionToggleAll').textContent =
-                allSelected ? 'Hiçbirini seçme' : 'Hepsini seç';
+                activeEmotions.size === allEmotionKeys.length ? 'Hiçbirini seçme' : 'Hepsini seç';
             updateMarkerVisibility();
             updateStats();
         }
@@ -925,8 +1172,12 @@
                     activePeople.has(story.person) &&
                     story.emotions.some(e => activeEmotions.has(e)) &&
                     storyMatchesSearch(story);
-                if (markerElements[story.id]) {
-                    markerElements[story.id].style.display = isVisible ? 'block' : 'none';
+                if (markerObjects[story.id]) {
+                    const outerEl = markerObjects[story.id].getElement();
+                    outerEl.style.display = isVisible ? '' : 'none';
+                    if (isVisible && markerObjects[story.id]._driftRestart) {
+                        markerObjects[story.id]._driftRestart();
+                    }
                 }
                 if (isVisible) visibleCount++;
             });
@@ -1073,7 +1324,7 @@
             return canvas;
         }
 
-        stories.forEach(story => {
+        function addMarkerForStory(story) {
             // Outer el: used by Mapbox for positioning (transform must not be overridden)
             const el = document.createElement('div');
             el.style.cursor = 'pointer';
@@ -1137,19 +1388,30 @@
             if (story.locationKnown === false) {
                 const baseLat = story.lat;
                 const baseLng = story.lng;
-                // Use overlapping sine waves with different periods for organic wandering
-                const t0 = Math.random() * 1000; // random phase offset so each marker drifts differently
-                const DRIFT_R = 0.0008; // radius in degrees (~80m)
+                const t0 = Math.random() * 1000;
+                const DRIFT_R = 0.0008;
+                let driftRafId = null;
+
                 function drift() {
+                    if (marker.getElement().style.display === 'none') {
+                        driftRafId = null;
+                        return;
+                    }
                     const t = (Date.now() - t0) / 1000;
                     const lat = baseLat + Math.sin(t * 0.17) * DRIFT_R + Math.sin(t * 0.41) * DRIFT_R * 0.4;
                     const lng = baseLng + Math.cos(t * 0.23) * DRIFT_R + Math.cos(t * 0.37) * DRIFT_R * 0.4;
                     marker.setLngLat([lng, lat]);
-                    requestAnimationFrame(drift);
+                    driftRafId = requestAnimationFrame(drift);
                 }
-                drift();
+
+                markerObjects[story.id]._driftRestart = () => {
+                    if (!driftRafId) driftRafId = requestAnimationFrame(drift);
+                };
+                driftRafId = requestAnimationFrame(drift);
             }
-        });
+        }
+
+        stories.forEach(addMarkerForStory);
         
         function updateCoordinates(story) {
             const msg = `${story.person} — ${story.title}\nLat: ${story.lat.toFixed(8)}\nLng: ${story.lng.toFixed(8)}`;
@@ -1210,6 +1472,9 @@
         buildEmotionFilter();
         updateMarkerVisibility();
         updateStats();
+
+        // Expose API for admin panel (add markers after map load)
+        window._mapApi = { addMarkerForStory, buildPeopleFilter, updateMarkerVisibility, updateStats };
     });
     
     map.on('error', (e) => {
@@ -1239,8 +1504,164 @@
         const panel = document.getElementById('video-panel');
         const iframe = document.getElementById('video-panel-iframe');
         panel.classList.remove('visible');
-        iframe.src = ''; // stop video playback
+        iframe.src = '';
     }
+
+    // ========================================
+    // ADMIN PANEL  (Ctrl+Shift+A to open)
+    // ========================================
+
+    const ADMIN_CREDS = { username: 'admin', password: 'uskudar2025' };
+
+    function openAdminLogin() {
+        document.getElementById('admin-login-overlay').classList.add('visible');
+        setTimeout(() => document.getElementById('admin-username').focus(), 50);
+    }
+    function closeAdminLogin() {
+        document.getElementById('admin-login-overlay').classList.remove('visible');
+        document.getElementById('admin-error').style.display = 'none';
+        document.getElementById('admin-username').value = '';
+        document.getElementById('admin-password').value = '';
+    }
+    function submitAdminLogin() {
+        const u = document.getElementById('admin-username').value.trim();
+        const p = document.getElementById('admin-password').value;
+        if (u === ADMIN_CREDS.username && p === ADMIN_CREDS.password) {
+            closeAdminLogin();
+            openAddStory();
+        } else {
+            document.getElementById('admin-error').style.display = 'block';
+        }
+    }
+
+    function openAddStory() {
+        const wrap = document.getElementById('ns-emotion-checkboxes');
+        wrap.innerHTML = '';
+        Object.entries(emotionData).forEach(([key, { hex, label }]) => {
+            const lbl = document.createElement('label');
+            lbl.dataset.emotion = key;
+            const cb = document.createElement('input');
+            cb.type = 'checkbox'; cb.value = key;
+            const swatch = document.createElement('span');
+            swatch.style.cssText = `width:8px;height:8px;border-radius:50%;background:${hex};display:inline-block;`;
+            lbl.appendChild(cb); lbl.appendChild(swatch);
+            lbl.appendChild(document.createTextNode(' ' + label));
+            cb.addEventListener('change', () => {
+                lbl.classList.toggle('checked', cb.checked);
+                lbl.style.backgroundColor = cb.checked ? hex : '';
+                lbl.style.borderColor = cb.checked ? hex : '';
+            });
+            wrap.appendChild(lbl);
+        });
+
+        const saved = JSON.parse(localStorage.getItem('uskudar-stories') || '[]');
+        const listEl = document.getElementById('admin-existing-stories');
+        if (saved.length > 0) {
+            listEl.innerHTML = `<p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#888;margin:20px 0 8px 0;">Daha önce eklenenler</p>`;
+            saved.forEach(s => {
+                const row = document.createElement('div');
+                row.className = 'admin-story-row';
+                row.innerHTML = `<span>${s.title} <em style="color:#bbb">(${s.person})</em></span>`;
+                const del = document.createElement('button');
+                del.textContent = '× Sil';
+                del.onclick = () => deleteStoredStory(s.id, row);
+                row.appendChild(del);
+                listEl.appendChild(row);
+            });
+        } else {
+            listEl.innerHTML = '';
+        }
+
+        document.getElementById('add-story-overlay').classList.add('visible');
+    }
+
+    function closeAddStory() {
+        document.getElementById('add-story-overlay').classList.remove('visible');
+        document.getElementById('story-error').style.display = 'none';
+        ['ns-person','ns-title','ns-narrative','ns-sensory','ns-lat','ns-lng','ns-video']
+            .forEach(id => { document.getElementById(id).value = ''; });
+        document.getElementById('ns-unknown-location').checked = false;
+    }
+
+    function submitNewStory() {
+        const person    = document.getElementById('ns-person').value.trim();
+        const title     = document.getElementById('ns-title').value.trim();
+        const narrative = document.getElementById('ns-narrative').value.trim();
+        const sensory   = document.getElementById('ns-sensory').value.trim();
+        const lat       = parseFloat(document.getElementById('ns-lat').value);
+        const lng       = parseFloat(document.getElementById('ns-lng').value);
+        const unknownLoc = document.getElementById('ns-unknown-location').checked;
+        const videoUrl  = document.getElementById('ns-video').value.trim();
+        const emotions  = [...document.querySelectorAll('#ns-emotion-checkboxes input:checked')]
+                            .map(i => i.value);
+
+        if (!person || !title || !narrative || isNaN(lat) || isNaN(lng) || emotions.length === 0) {
+            document.getElementById('story-error').style.display = 'block';
+            return;
+        }
+
+        const newStory = {
+            id: Date.now(), person, title, lat, lng,
+            narrative, sensory: sensory || 'TBF', emotions,
+            ...(unknownLoc && { locationKnown: false }),
+            ...(videoUrl   && { videoUrl }),
+        };
+
+        const saved = JSON.parse(localStorage.getItem('uskudar-stories') || '[]');
+        saved.push(newStory);
+        localStorage.setItem('uskudar-stories', JSON.stringify(saved));
+
+        stories.push(newStory);
+        if (!people.includes(person)) people.push(person);
+        activePeople.add(person);
+
+        if (window._mapApi) {
+            window._mapApi.addMarkerForStory(newStory);
+            window._mapApi.buildPeopleFilter();
+            window._mapApi.updateMarkerVisibility();
+            window._mapApi.updateStats();
+        }
+
+        closeAddStory();
+
+        let toast = document.getElementById('coord-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'coord-toast';
+            Object.assign(toast.style, {
+                position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
+                background: 'rgba(0,0,0,0.82)', color: '#fff', padding: '10px 18px',
+                borderRadius: '8px', fontFamily: 'monospace', fontSize: '13px',
+                whiteSpace: 'pre', zIndex: 9999, pointerEvents: 'none',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.4)', transition: 'opacity 0.3s'
+            });
+            document.body.appendChild(toast);
+        }
+        toast.textContent = `✓ "${title}" haritaya eklendi`;
+        toast.style.opacity = '1';
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3500);
+    }
+
+    function deleteStoredStory(id, rowEl) {
+        if (!confirm('Bu tanıklık kalıcı olarak silinecek. Emin misiniz?')) return;
+        const saved = JSON.parse(localStorage.getItem('uskudar-stories') || '[]');
+        localStorage.setItem('uskudar-stories', JSON.stringify(saved.filter(s => s.id !== id)));
+        if (markerObjects[id]) { markerObjects[id].remove(); delete markerObjects[id]; delete markerElements[id]; }
+        const idx = stories.findIndex(s => s.id === id);
+        if (idx !== -1) stories.splice(idx, 1);
+        if (window._mapApi) { window._mapApi.updateMarkerVisibility(); window._mapApi.updateStats(); }
+        rowEl.remove();
+    }
+
+    // Ctrl+Shift+A → admin login (hidden from public view)
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeAdminLogin(); closeAddStory(); }
+        if (e.ctrlKey && e.shiftKey && e.key === 'A') { e.preventDefault(); openAdminLogin(); }
+    });
+    document.getElementById('admin-password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') submitAdminLogin();
+    });
 </script>
 
 </body>
