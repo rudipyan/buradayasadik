@@ -2140,6 +2140,124 @@
         updateStats();
     }
 
+    // ── Bulk Add ─────────────────────────────
+    function addBulkCard() {
+        const cards = document.getElementById('bulk-cards');
+        const idx   = cards.children.length + 1;
+        const card  = document.createElement('div');
+        card.className = 'bulk-card';
+        card.dataset.cardIdx = idx;
+
+        // Build emotion pills for this card
+        const emotionPills = Object.entries(emotionData).map(([key, {hex, label}]) =>
+            `<input type="checkbox" id="bc-em-${idx}-${key}" value="${key}"
+                style="display:none"
+                onchange="bcEmotionToggle(this,'${hex}')">
+             <label for="bc-em-${idx}-${key}"
+                class="emotion-check-label"
+                style="font-size:10px;padding:2px 8px;">${label}</label>`
+        ).join('');
+
+        card.innerHTML = `
+            <button class="bulk-remove-btn" onclick="this.closest('.bulk-card').remove(); updateBulkSaveBtn()">×</button>
+            <div class="bulk-card-num">Tanıklık ${idx}</div>
+
+            <span class="modal-field-label" style="margin-top:0" data-i18n="titleLabel">Başlık *</span>
+            <input type="text" class="modal-input bc-title" placeholder="">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <div>
+                    <span class="modal-field-label" data-i18n="latLabel">Enlem *</span>
+                    <input type="number" step="0.00001" class="modal-input bc-lat" placeholder="41.028">
+                </div>
+                <div>
+                    <span class="modal-field-label" data-i18n="lngLabel">Boylam *</span>
+                    <input type="number" step="0.00001" class="modal-input bc-lng" placeholder="29.033">
+                </div>
+            </div>
+
+            <span class="modal-field-label" data-i18n="narrativeLabel">Anlatı *</span>
+            <textarea class="modal-textarea bc-narrative" style="height:60px"></textarea>
+
+            <span class="modal-field-label" data-i18n="periodLabel">Dönem (isteğe bağlı)</span>
+            <input type="text" class="modal-input bc-period" placeholder="">
+
+            <div class="inline-check">
+                <input type="checkbox" class="bc-ghost" id="bc-ghost-${idx}">
+                <label for="bc-ghost-${idx}" data-i18n="ghostLabel">Mevcut değil</label>
+            </div>
+
+            <span class="modal-field-label" data-i18n="emotionLabel">Duygular *</span>
+            <div class="emotion-check-grid bc-emotions">${emotionPills}</div>
+
+            <div class="modal-error bc-error" style="display:none" data-i18n="errorRequired">Zorunlu alanları doldurun.</div>
+        `;
+        cards.appendChild(card);
+        applyLang(currentLang); // translate new card's data-i18n nodes
+        updateBulkSaveBtn();
+    }
+
+    function bcEmotionToggle(cb, hex) {
+        const lbl = cb.nextElementSibling;
+        lbl.classList.toggle('checked', cb.checked);
+        lbl.style.backgroundColor = cb.checked ? hex : '';
+        lbl.style.borderColor     = cb.checked ? hex : '';
+    }
+
+    function updateBulkSaveBtn() {
+        const n   = document.getElementById('bulk-cards').children.length;
+        const btn = document.getElementById('bulk-save-btn');
+        if (!btn) return;
+        btn.textContent = t('saveAllBtn')(n);
+        btn.disabled = n === 0;
+    }
+
+    function saveBulkStories() {
+        const person = document.getElementById('bulk-person').value.trim();
+        const cards  = [...document.getElementById('bulk-cards').querySelectorAll('.bulk-card')];
+        let allValid = true;
+
+        const toSave = cards.map(card => {
+            const title     = card.querySelector('.bc-title').value.trim();
+            const lat       = parseFloat(card.querySelector('.bc-lat').value);
+            const lng       = parseFloat(card.querySelector('.bc-lng').value);
+            const narrative = card.querySelector('.bc-narrative').value.trim();
+            const period    = card.querySelector('.bc-period').value.trim();
+            const isGhost   = card.querySelector('.bc-ghost').checked;
+            const emotions  = [...card.querySelectorAll('.bc-emotions input:checked')].map(i => i.value);
+            const errEl     = card.querySelector('.bc-error');
+            const valid     = !!title && !isNaN(lat) && !isNaN(lng) && !!narrative && emotions.length > 0;
+            errEl.style.display = valid ? 'none' : 'block';
+            if (!valid) allValid = false;
+            return valid ? {
+                id: Date.now() + Math.random(),
+                person: person || 'Unknown',
+                title, lat, lng, narrative, period, isGhost, emotions
+            } : null;
+        }).filter(Boolean);
+
+        if (toSave.length === 0) return;
+
+        toSave.forEach(s => {
+            stories.push(s);
+            addMarkerForStory(s);
+            if (!people.includes(s.person)) people.push(s.person);
+        });
+        saveStories();
+        if (window._mapApi) {
+            window._mapApi.buildPeopleFilter();
+        }
+        updateMarkerVisibility();
+        updateStats();
+
+        // Clear bulk pane
+        document.getElementById('bulk-cards').innerHTML = '';
+        document.getElementById('bulk-person').value = '';
+        updateBulkSaveBtn();
+
+        if (!allValid) alert('Some cards had errors and were skipped. Valid stories were saved.');
+    }
+
     // Ctrl+Shift+A → admin login (hidden from public view)
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') { closeAdminLogin(); closeStoryManagement(); }
