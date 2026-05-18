@@ -968,6 +968,172 @@
     // People names
     const people = ['1', '2', '3', '4', 'Mikail'];
 
+    // ========================================
+    // i18n
+    // ========================================
+    const i18n = {
+        tr: {
+            panelTitle:        'Burada Yaşadık',
+            peopleHeader:      'Kişiler',
+            emotionsHeader:    'Duygular',
+            toggleNone:        'Hiçbirini seçme',
+            searchPlaceholder: 'Ara…',
+            filterAll:         'Tümü',
+            storyCount:        n => `${n} tanıklık`,
+            editBtn:           'Düzenle',
+            deleteBtn:         'Sil',
+            backBtn:           '← Listeye dön',
+            saveBtn:           'Değişiklikleri Kaydet',
+            cancelBtn:         'İptal',
+            addCardBtn:        '+ Tanıklık ekle',
+            saveAllBtn:        n => `Tümünü Kaydet (${n} tanıklık)`,
+            tabStories:        'Tanıklıklar',
+            tabBulk:           'Toplu Ekle',
+            modalTitle:        'Tanıklık Yönetimi',
+            personLabel:       'Kişi',
+            titleLabel:        'Başlık',
+            narrativeLabel:    'Anlatı',
+            periodLabel:       'Dönem (isteğe bağlı)',
+            periodPlaceholder: '1980ler, Çocukluk…',
+            latLabel:          'Enlem',
+            lngLabel:          'Boylam',
+            ghostLabel:        'Mevcut değil',
+            emotionLabel:      'Duygular',
+            videoLabel:        'YouTube URL (isteğe bağlı)',
+            bulkPersonLabel:   'Görüşmeci:',
+            bulkPersonHint:    '← tüm kartlara uygulanır',
+            errorRequired:     'Zorunlu alanları doldurun ve en az bir duygu seçin.',
+            legendActive:      'Mevcut mekan',
+            legendGhost:       'Artık mevcut değil',
+            watchBtn:          '▶ Tanıklığı İzle',
+            popupPeriod:       'Dönem',
+            adminLoginTitle:   'Yönetici Girişi',
+            adminUser:         'Kullanıcı Adı',
+            adminPass:         'Şifre',
+            adminError:        'Kullanıcı adı veya şifre hatalı.',
+            adminLoginBtn:     'Giriş',
+        },
+        en: {
+            panelTitle:        'We Lived Here',
+            peopleHeader:      'People',
+            emotionsHeader:    'Emotions',
+            toggleNone:        'Deselect all',
+            searchPlaceholder: 'Search…',
+            filterAll:         'All',
+            storyCount:        n => `${n} stories`,
+            editBtn:           'Edit',
+            deleteBtn:         'Delete',
+            backBtn:           '← Back to list',
+            saveBtn:           'Save Changes',
+            cancelBtn:         'Cancel',
+            addCardBtn:        '+ Add story',
+            saveAllBtn:        n => `Save All (${n} stories)`,
+            tabStories:        'Stories',
+            tabBulk:           'Bulk Add',
+            modalTitle:        'Story Management',
+            personLabel:       'Person',
+            titleLabel:        'Title',
+            narrativeLabel:    'Narrative',
+            periodLabel:       'Time period (optional)',
+            periodPlaceholder: '1980s, Childhood…',
+            latLabel:          'Latitude',
+            lngLabel:          'Longitude',
+            ghostLabel:        'No longer exists',
+            emotionLabel:      'Emotions',
+            videoLabel:        'YouTube URL (optional)',
+            bulkPersonLabel:   'Person:',
+            bulkPersonHint:    '← applies to all cards',
+            errorRequired:     'Fill in required fields and select at least one emotion.',
+            legendActive:      'Active place',
+            legendGhost:       'No longer exists',
+            watchBtn:          '▶ Watch testimony',
+            popupPeriod:       'Period',
+            adminLoginTitle:   'Admin Login',
+            adminUser:         'Username',
+            adminPass:         'Password',
+            adminError:        'Incorrect username or password.',
+            adminLoginBtn:     'Login',
+        },
+        hy: {
+            // Western Armenian — all placeholders except where provided by user
+            panelTitle:        '[ՀՅ]',
+            peopleHeader:      '[ՀՅ]',
+            emotionsHeader:    '[ՀՅ]',
+            toggleNone:        '[ՀՅ]',
+            searchPlaceholder: '[ՀՅ]',
+            filterAll:         '[ՀՅ]',
+            storyCount:        n => `[ՀՅ] ${n}`,
+            editBtn:           '[ՀՅ]',
+            deleteBtn:         '[ՀՅ]',
+            backBtn:           '[ՀՅ]',
+            saveBtn:           '[ՀՅ]',
+            cancelBtn:         '[ՀՅ]',
+            addCardBtn:        '[ՀՅ]',
+            saveAllBtn:        n => `[ՀՅ] (${n})`,
+            tabStories:        '[ՀՅ]',
+            tabBulk:           '[ՀՅ]',
+            modalTitle:        '[ՀՅ]',
+            personLabel:       '[ՀՅ]',
+            titleLabel:        '[ՀՅ]',
+            narrativeLabel:    '[ՀՅ]',
+            periodLabel:       '[ՀՅ]',
+            periodPlaceholder: '[ՀՅ]',
+            latLabel:          '[ՀՅ]',
+            lngLabel:          '[ՀՅ]',
+            ghostLabel:        'Այլեւս չկայ',
+            emotionLabel:      '[ՀՅ]',
+            videoLabel:        '[ՀՅ]',
+            bulkPersonLabel:   '[ՀՅ]',
+            bulkPersonHint:    '[ՀՅ]',
+            errorRequired:     '[ՀՅ]',
+            legendActive:      '[ՀՅ]',
+            legendGhost:       'Այլեւս չկայ',
+            watchBtn:          '[ՀՅ]',
+            popupPeriod:       '[ՀՅ]',
+            adminLoginTitle:   '[ՀՅ]',
+            adminUser:         '[ՀՅ]',
+            adminPass:         '[ՀՅ]',
+            adminError:        '[ՀՅ]',
+            adminLoginBtn:     '[ՀՅ]',
+        },
+    };
+
+    let currentLang = localStorage.getItem('uskudar-lang') || 'tr';
+
+    function t(key) {
+        return i18n[currentLang][key] ?? i18n.tr[key] ?? key;
+    }
+
+    function applyLang(lang) {
+        currentLang = lang;
+        localStorage.setItem('uskudar-lang', lang);
+
+        // Static text nodes
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            if (i18n[lang][key] !== undefined && typeof i18n[lang][key] === 'string') {
+                el.textContent = i18n[lang][key];
+            }
+        });
+        // Placeholder attributes
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.dataset.i18nPlaceholder;
+            if (i18n[lang][key] !== undefined) {
+                el.placeholder = i18n[lang][key];
+            }
+        });
+
+        // Lang pill: update active state
+        document.querySelectorAll('.lang-option').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+
+        // Rebuild dynamic lists that include translated strings
+        if (typeof buildPeopleFilter === 'function') buildPeopleFilter();
+        if (typeof buildEmotionFilter === 'function') buildEmotionFilter();
+        if (typeof renderStoryList === 'function') renderStoryList();
+    }
+
     // Load user-submitted stories from localStorage before map renders
     (function loadStoredStories() {
         const saved = JSON.parse(localStorage.getItem('uskudar-stories') || '[]');
