@@ -1086,7 +1086,7 @@
                 btn.className = 'emotion-chip active';
                 btn.style.backgroundColor = hex;
                 btn.style.borderColor = hex;
-                btn.innerHTML = `<span class="swatch" style="background:${hex};"></span>${label}`;
+                btn.innerHTML = label;
                 btn.dataset.emotion = emotion;
                 btn.onclick = () => toggleEmotion(emotion, btn);
                 grid.appendChild(btn);
