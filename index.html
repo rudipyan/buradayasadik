@@ -621,11 +621,66 @@
             transition: background 0.15s;
         }
         .play-video-btn:hover { background: #444; }
+
+        /* ── Language switcher ─────────────────────── */
+        #lang-switcher {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.92);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 20px;
+            padding: 4px 8px;
+            gap: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+            overflow: hidden;
+            max-width: 32px;
+            transition: max-width 0.25s ease;
+            cursor: pointer;
+        }
+        #lang-switcher:hover,
+        #lang-switcher:focus-within {
+            max-width: 120px;
+        }
+        .lang-option {
+            font-size: 11px;
+            font-weight: 700;
+            color: #aaa;
+            padding: 2px 6px;
+            border-radius: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            border: none;
+            background: none;
+            transition: color 0.15s, background 0.15s;
+            display: none;
+        }
+        #lang-switcher:hover .lang-option,
+        #lang-switcher:focus-within .lang-option {
+            display: inline-block;
+        }
+        .lang-option.active {
+            display: inline-block;
+            color: #1a1a1a;
+            background: #f0f0f0;
+        }
+        .lang-option:hover {
+            color: #1a1a1a;
+        }
     </style>
 </head>
 <body>
 
-<div id="map"></div>
+<div id="map">
+<div id="lang-switcher" role="group" aria-label="Language">
+    <button class="lang-option active" data-lang="tr" onclick="applyLang('tr')">TR</button>
+    <button class="lang-option" data-lang="en" onclick="applyLang('en')">EN</button>
+    <button class="lang-option" data-lang="hy" onclick="applyLang('hy')">ՀՅ</button>
+</div>
+</div>
 
 <!-- Floating video panel -->
 <div id="video-panel">
@@ -1840,6 +1895,9 @@
     document.getElementById('admin-password').addEventListener('keydown', e => {
         if (e.key === 'Enter') submitAdminLogin();
     });
+
+    // Apply saved language on load
+    applyLang(currentLang);
 </script>
 
 </body>
