@@ -803,6 +803,14 @@
             <div class="emotion-chips-wrap" id="emotionGrid"></div>
         </div>
 
+        <!-- GHOST LAYER TOGGLE -->
+        <div class="filter-section" style="margin-top:8px">
+            <div class="inline-check">
+                <input type="checkbox" id="ghost-toggle" checked onchange="updateMarkerVisibility()">
+                <label for="ghost-toggle" data-i18n="legendGhost">Artık mevcut değil</label>
+            </div>
+        </div>
+
         <div class="sidebar-divider"></div>
 
         <!-- STATS -->
@@ -1544,10 +1552,13 @@
         function updateMarkerVisibility() {
             let visibleCount = 0;
             stories.forEach(story => {
+                const showGhosts = document.getElementById('ghost-toggle')?.checked ?? true;
+
                 const isVisible =
                     activePeople.has(story.person) &&
                     story.emotions.some(e => activeEmotions.has(e)) &&
-                    storyMatchesSearch(story);
+                    storyMatchesSearch(story) &&
+                    (showGhosts || !story.isGhost);
                 if (markerObjects[story.id]) {
                     const outerEl = markerObjects[story.id].getElement();
                     outerEl.style.display = isVisible ? '' : 'none';
