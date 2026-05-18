@@ -1543,7 +1543,7 @@
                 Math.round(b + (grey - b) * factor),
             ];
         }
-        function buildParticleMarker(emotions, physicalSize, drifting, ghost) {
+        function buildParticleMarker(emotions, physicalSize, drifting, ghost, ghostAlreadyVisible) {
             const SIZE = physicalSize || BASE_SIZE;
             const scale = SIZE / BASE_SIZE;
             const cx = SIZE / 2, cy = SIZE / 2;
@@ -1696,26 +1696,33 @@
                     // Hidden: 5–18 s (low bias → longer, but never disappear for too long)
                     const hiddenMs  = 5000 + (1 - bias) * 13000 + Math.random() * 4000;
                     canvas.style.opacity = '1';
+                    canvas._ghostVisible = true;
                     ghostTimerId = setTimeout(() => {
                         if (caught) return;
                         canvas.style.opacity = '0';
+                        canvas._ghostVisible = false;
                         ghostTimerId = setTimeout(scheduleGhost, hiddenMs);
                     }, visibleMs);
                 }
 
-                // First appearance: 1–6 s staggered so markers don't all pop at once
-                const initialDelay = 1000 + markerPhase * 5000;
-                ghostTimerId = setTimeout(scheduleGhost, initialDelay);
+                if (ghostAlreadyVisible) {
+                    // Zoom rebuild mid-cycle: resume as visible immediately, no restart
+                    scheduleGhost();
+                } else {
+                    // First appearance: 1–6 s staggered so markers don't all pop at once
+                    const initialDelay = 1000 + markerPhase * 5000;
+                    ghostTimerId = setTimeout(scheduleGhost, initialDelay);
+                }
 
                 // ── Catch / release ───────────────────────────────────────────
                 canvas.addEventListener('mouseenter', () => {
                     if (!ghost) return;
                     caught = true;
                     materializeT = performance.now();
-                    // Cancel any pending hide/show timers — ghost is frozen
                     if (ghostTimerId) { clearTimeout(ghostTimerId); ghostTimerId = null; }
                     canvas.style.transition = 'opacity 0.3s ease';
                     canvas.style.opacity = '1';
+                    canvas._ghostVisible = true;
                     startAnim();
                 });
 
@@ -1820,6 +1827,12 @@
                         driftRafId = null;
                         return;
                     }
+                    const canvas = marker.getElement().querySelector('canvas');
+                    if (canvas?._hovering) {
+                        // Cursor is on the marker — freeze position, keep loop alive
+                        driftRafId = requestAnimationFrame(drift);
+                        return;
+                    }
                     const t = (Date.now() - t0) / 1000;
                     const lat = baseLat + Math.sin(t * 0.17) * DRIFT_R + Math.sin(t * 0.41) * DRIFT_R * 0.4;
                     const lng = baseLng + Math.cos(t * 0.23) * DRIFT_R + Math.cos(t * 0.37) * DRIFT_R * 0.4;
@@ -1883,8 +1896,9 @@
                 if (!oldCanvas) return;
                 // Skip rebuild while user is hovering — avoids interrupting the animation
                 if (oldCanvas._hovering) return;
-                // Rebuild canvas at new physical size — preserves sharpness
-                const newCanvas = buildParticleMarker(story.emotions, physicalSize, story.locationKnown === false, !!story.isGhost);
+                // Rebuild canvas at new physical size — preserves sharpness.
+                // Pass ghost's current visible state so it doesn't restart from scratch.
+                const newCanvas = buildParticleMarker(story.emotions, physicalSize, story.locationKnown === false, !!story.isGhost, !!oldCanvas._ghostVisible);
                 // Stop rAF + ghost scheduler on the old canvas before detaching, otherwise
                 // every zoom-bucket change leaks an animation loop and a setTimeout chain
                 // that keeps mutating a detached node.
