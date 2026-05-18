@@ -1618,18 +1618,22 @@
             ).join(' ');
 
             // Create popup with video
+            const periodHTML = story.period
+                ? `<div style="font-size:11px;color:#888;margin-bottom:0.5rem;">
+                       <strong>${t('popupPeriod')}:</strong> ${story.period}
+                   </div>`
+                : '';
+
             const popupHTML = `
                 <h3>${story.title}</h3>
                 <div class="person-name"><strong>${story.person}</strong></div>
                 <div style="margin-bottom:0.75rem;">${emotionTags}</div>
+                ${periodHTML}
                 <p>${story.narrative}</p>
-                <div class="sensory">
-                    <strong style="color: #555; font-size: 11px;">Duyular:</strong><br>
-                    ${story.sensory}
-                </div>
                 ${story.videoUrl ? `<div style="text-align:center; margin-top: 0.75rem;">
-                    <button class="play-video-btn" onclick="openVideoPanel('${story.videoUrl}', '${story.title} — ${story.person}')">
-                        ▶ Tanıklığı İzle
+                    <button class="play-video-btn"
+                        onclick="openVideoPanel('${story.videoUrl}', '${story.title} — ${story.person}')">
+                        ${t('watchBtn')}
                     </button>
                 </div>` : ''}
             `;
