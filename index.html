@@ -818,7 +818,7 @@
     mapboxgl.accessToken = 'pk.eyJ1IjoicnVkaXB5YW4iLCJhIjoiY21wYmFnbnAzMDV0bzJxczZ5Yzd5bHdxZCJ9.E0gE2PwwstnLZQb9MeUTvA';
     
     // Story data with people and emotions (emotions is an array — can have multiple)
-    const stories = [
+    const SEED_STORIES = [
         // INTERVIEWEE 1'S STORIES
         {
             id: 1,
@@ -1194,16 +1194,29 @@
     }
     window.applyLang = applyLang;
 
-    // Load user-submitted stories from localStorage before map renders
-    (function loadStoredStories() {
-        const saved = JSON.parse(localStorage.getItem('uskudar-stories') || '[]');
-        saved.forEach(s => {
-            if (!stories.find(x => x.id === s.id)) {
+    // Runtime story list — filled by seedAndLoadStories()
+    let stories = [];
+
+    // ========================================
+    // STORAGE — seed + load
+    // ========================================
+    function seedAndLoadStories() {
+        const saved = localStorage.getItem('uskudar-stories');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            parsed.forEach(s => {
+                // Backfill new fields on old objects
+                if (s.period === undefined) s.period = '';
+                if (s.isGhost === undefined) s.isGhost = false;
                 stories.push(s);
-                if (!people.includes(s.person)) people.push(s.person);
-            }
-        });
-    })();
+            });
+        } else if (!localStorage.getItem('uskudar-seeded')) {
+            // Not seeded yet and no stories — load SEED_STORIES as runtime source
+            // until first admin login triggers seedStoriesFromHardcoded()
+            SEED_STORIES.forEach(s => stories.push({ ...s, period: s.period ?? '', isGhost: s.isGhost ?? false }));
+        }
+    }
+    seedAndLoadStories();
 
     // ========================================
     // STATE MANAGEMENT
@@ -1743,6 +1756,23 @@
     // ========================================
     // ADMIN PANEL  (Ctrl+Shift+A to open)
     // ========================================
+
+    function saveStories() {
+        localStorage.setItem('uskudar-stories', JSON.stringify(stories));
+    }
+
+    function seedStoriesFromHardcoded() {
+        if (localStorage.getItem('uskudar-seeded')) return;
+        const seeded = SEED_STORIES.map(s => ({
+            ...s,
+            period:  s.period  ?? '',
+            isGhost: s.isGhost ?? false,
+        }));
+        localStorage.setItem('uskudar-stories', JSON.stringify(seeded));
+        localStorage.setItem('uskudar-seeded', '1');
+        // Reload so the seeded data drives the map
+        location.reload();
+    }
 
     const ADMIN_CREDS = { username: 'admin', password: 'uskudar2025' };
 
