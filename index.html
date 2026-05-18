@@ -642,33 +642,6 @@
         .lang-option:hover {
             color: #1a1a1a;
         }
-        /* ── Map legend ─────────────────────────── */
-        #map-legend {
-            position: absolute;
-            bottom: 28px;
-            left: 10px;
-            z-index: 5;
-            background: rgba(255,255,255,0.9);
-            border: 1px solid rgba(0,0,0,0.08);
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 10px;
-            color: #555;
-            pointer-events: none;
-        }
-        .legend-row {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            margin-bottom: 4px;
-        }
-        .legend-row:last-child { margin-bottom: 0; }
-        .legend-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
 
         /* ── Story management modal ─────────────── */
         .mgmt-tabs {
@@ -775,13 +748,8 @@
             <div class="emotion-chips-wrap" id="emotionGrid"></div>
         </div>
 
-        <!-- GHOST LAYER TOGGLE -->
-        <div class="filter-section" style="margin-top:8px">
-            <div class="inline-check">
-                <input type="checkbox" id="ghost-toggle" checked onchange="updateMarkerVisibility()">
-                <label for="ghost-toggle" data-i18n="legendGhost">Artık mevcut değil</label>
-            </div>
-        </div>
+        <!-- ghost markers are always shown; hidden input keeps downstream JS working -->
+        <input type="checkbox" id="ghost-toggle" checked style="display:none">
 
         <div class="sidebar-divider"></div>
 
@@ -965,6 +933,7 @@
             lng: 29.0328,
             emotions: ["blue", "purple"],
             narrative: "Nam liber tempor cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.",
+            isGhost: true,
         },
         {
             id: 5,
@@ -1070,6 +1039,7 @@
             lng: 29.0329,
             emotions: ["green", "purple"],
             narrative: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione.",
+            isGhost: true,
         },
         {
             id: 16,
@@ -1079,6 +1049,7 @@
             lng: 29.0323,
             emotions: ["green", "purple"],
             narrative: "Nam liber tempor cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus omnis.",
+            isGhost: true,
         },
         {
             id: 17,
@@ -1613,10 +1584,13 @@
             let mouseX = -999, mouseY = -999;
             let hovering = false;
             let rafId = null;
+            let caught = false;        // true while cursor holds a ghost in place
+            let materializeT = 0;      // timestamp of the catch, drives flash effect
 
             function tick() {
                 ctx.clearRect(0, 0, SIZE, SIZE);
                 let anyMoving = false;
+                const now = performance.now();
 
                 for (const p of particles) {
                     // Repulsion from cursor
@@ -1647,9 +1621,26 @@
 
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    if (ghost) {
-                        const alpha = 0.08 + 0.37 * (0.5 + 0.5 * Math.sin(performance.now() * 0.0025 + p.phase));
+                    if (ghost && !caught) {
+                        // Uncaught ghost: desaturated, pulsing alpha
+                        const alpha = 0.08 + 0.37 * (0.5 + 0.5 * Math.sin(now * 0.0025 + p.phase));
                         const [r, g, b] = p.ghostRgb;
+                        ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+                    } else if (ghost && caught) {
+                        // Caught ghost: materialize to full color with a brief brightness flash
+                        const elapsed = now - materializeT;
+                        const flash = elapsed < 600 ? Math.exp(-elapsed / 200) : 0; // quick exponential decay
+                        const alpha = Math.min(1, 0.85 + flash * 0.15);
+                        // Blend from ghost desaturated towards full color as flash decays
+                        const blend = Math.min(1, elapsed / 800);
+                        const [gr, gg, gb] = p.ghostRgb;
+                        const fc = p.color; // hex string — parse inline
+                        const fr = parseInt(fc.slice(1,3),16);
+                        const fg = parseInt(fc.slice(3,5),16);
+                        const fb = parseInt(fc.slice(5,7),16);
+                        const r = Math.round(gr + (fr - gr) * blend);
+                        const g = Math.round(gg + (fg - gg) * blend);
+                        const b = Math.round(gb + (fb - gb) * blend);
                         ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
                     } else {
                         ctx.fillStyle = p.color;
@@ -1657,18 +1648,16 @@
                     ctx.fill();
                 }
 
-                rafId = ghost
-                    ? requestAnimationFrame(tick)
-                    : ((hovering || anyMoving) ? requestAnimationFrame(tick) : null);
+                // Ghost markers always animate; caught ghosts also keep animating
+                rafId = (ghost || hovering || anyMoving) ? requestAnimationFrame(tick) : null;
             }
 
             function startAnim() { if (!rafId) rafId = requestAnimationFrame(tick); }
 
             canvas.addEventListener('mouseenter', (e) => {
                 hovering = true;
-                canvas._hovering = true; // expose hover state for zoom rebuild check
+                canvas._hovering = true;
                 const rect = canvas.getBoundingClientRect();
-                // CSS size == canvas size (1:1), no scale conversion needed
                 mouseX = e.clientX - rect.left;
                 mouseY = e.clientY - rect.top;
                 startAnim();
@@ -1682,15 +1671,68 @@
                 hovering = false;
                 canvas._hovering = false;
                 mouseX = -999; mouseY = -999;
-                startAnim(); // keep running until particles settle
+                startAnim();
             });
 
             // Initial static render
             tick();
 
+            // ── Ghost haunting scheduler ──────────────────────────────────────
+            let ghostTimerId = null;
+            if (ghost) {
+                if (!sessionStorage.getItem('ghostBias')) {
+                    sessionStorage.setItem('ghostBias', Math.random().toFixed(4));
+                }
+                const bias = parseFloat(sessionStorage.getItem('ghostBias'));
+                const markerPhase = Math.random();
+
+                canvas.style.transition = 'opacity 1.8s ease';
+                canvas.style.opacity    = '0';
+
+                function scheduleGhost() {
+                    if (caught) return;
+                    // Visible: 6–20 s (high bias → longer)
+                    const visibleMs = 6000 + bias * 14000 + Math.random() * 4000;
+                    // Hidden: 5–18 s (low bias → longer, but never disappear for too long)
+                    const hiddenMs  = 5000 + (1 - bias) * 13000 + Math.random() * 4000;
+                    canvas.style.opacity = '1';
+                    ghostTimerId = setTimeout(() => {
+                        if (caught) return;
+                        canvas.style.opacity = '0';
+                        ghostTimerId = setTimeout(scheduleGhost, hiddenMs);
+                    }, visibleMs);
+                }
+
+                // First appearance: 1–6 s staggered so markers don't all pop at once
+                const initialDelay = 1000 + markerPhase * 5000;
+                ghostTimerId = setTimeout(scheduleGhost, initialDelay);
+
+                // ── Catch / release ───────────────────────────────────────────
+                canvas.addEventListener('mouseenter', () => {
+                    if (!ghost) return;
+                    caught = true;
+                    materializeT = performance.now();
+                    // Cancel any pending hide/show timers — ghost is frozen
+                    if (ghostTimerId) { clearTimeout(ghostTimerId); ghostTimerId = null; }
+                    canvas.style.transition = 'opacity 0.3s ease';
+                    canvas.style.opacity = '1';
+                    startAnim();
+                });
+
+                canvas.addEventListener('mouseleave', () => {
+                    if (!ghost) return;
+                    caught = false;
+                    // Brief grace period before the ghost resumes its haunting cycle
+                    canvas.style.transition = 'opacity 1.8s ease';
+                    ghostTimerId = setTimeout(scheduleGhost, 1200 + Math.random() * 2000);
+                });
+            }
+            // ─────────────────────────────────────────────────────────────────
+
             // Expose cancel so callers can stop the loop when removing the marker
             canvas.destroyAnim = () => {
                 if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+                if (ghostTimerId) { clearTimeout(ghostTimerId); ghostTimerId = null; }
             };
 
             return canvas;
@@ -1843,6 +1885,10 @@
                 if (oldCanvas._hovering) return;
                 // Rebuild canvas at new physical size — preserves sharpness
                 const newCanvas = buildParticleMarker(story.emotions, physicalSize, story.locationKnown === false, !!story.isGhost);
+                // Stop rAF + ghost scheduler on the old canvas before detaching, otherwise
+                // every zoom-bucket change leaks an animation loop and a setTimeout chain
+                // that keeps mutating a detached node.
+                if (oldCanvas.destroyAnim) oldCanvas.destroyAnim();
                 inner.replaceChild(newCanvas, oldCanvas);
             });
         }
@@ -1857,20 +1903,7 @@
         // Expose API for admin panel (add markers after map load)
         window._mapApi = { addMarkerForStory, buildPeopleFilter, buildEmotionFilter, updateMarkerVisibility, updateStats };
 
-        // Map legend
-        const legend = document.createElement('div');
-        legend.id = 'map-legend';
-        legend.innerHTML = `
-            <div class="legend-row">
-                <div class="legend-dot" style="background:#4A90E2"></div>
-                <span data-i18n="legendActive">${t('legendActive')}</span>
-            </div>
-            <div class="legend-row">
-                <div class="legend-dot" style="background:rgba(100,105,130,0.3);border:1.5px solid rgba(100,105,130,0.4)"></div>
-                <span data-i18n="legendGhost">${t('legendGhost')}</span>
-            </div>
-        `;
-        document.getElementById('map').appendChild(legend);
+        // Map legend removed — no longer needed
     });
     
     map.on('error', (e) => {
