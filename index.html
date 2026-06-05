@@ -729,20 +729,34 @@
             line-height: 1.8;
             color: #555;
         }
-        #intro-cue {
-            margin-top: 28px;
-            font-size: 18px;
-            color: #aaa;
-            letter-spacing: 2px;
-            animation: introCueBob 2.2s ease-in-out infinite;
+        #intro-lang {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
-        @keyframes introCueBob {
-            0%, 100% { transform: translateY(0);   opacity: 0.5; }
-            50%      { transform: translateY(4px); opacity: 1;   }
+        .intro-lang-btn {
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+            background: rgba(255,255,255,0.7);
+            border: 1.5px solid rgba(0,0,0,0.15);
+            border-radius: 20px;
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
         }
+        .intro-lang-btn:hover {
+            background: #1a1a1a;
+            border-color: #1a1a1a;
+            color: #fff;
+        }
+        .intro-lang-btn:active { transform: scale(0.97); }
         @media (prefers-reduced-motion: reduce) {
             #intro-overlay { transition: none; }
-            #intro-cue { animation: none; }
+            .intro-lang-btn { transition: none; }
         }
     </style>
 </head>
@@ -761,7 +775,11 @@
     <div id="intro-inner">
         <h1 id="intro-heading" data-i18n="introHeading">Burada Yaşadık</h1>
         <p id="intro-body" data-i18n="introBody">Burada Yaşadık, İstanbul'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.</p>
-        <div id="intro-cue" aria-hidden="true">↓</div>
+        <div id="intro-lang" role="group" aria-label="Language / Dil / Լեզու">
+            <button type="button" class="intro-lang-btn" data-lang="tr">Türkçe</button>
+            <button type="button" class="intro-lang-btn" data-lang="en">English</button>
+            <button type="button" class="intro-lang-btn" data-lang="hy">Հայերէն</button>
+        </div>
     </div>
 </div>
 
@@ -2678,6 +2696,14 @@
         overlay.addEventListener('click', dismissIntro);
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape' && overlay.classList.contains('visible')) dismissIntro();
+        });
+
+        // Language buttons: set the site language, then enter the map.
+        overlay.querySelectorAll('.intro-lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                applyLang(btn.dataset.lang);
+                dismissIntro();
+            });
         });
     })();
 </script>
