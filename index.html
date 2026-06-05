@@ -687,6 +687,63 @@
         .bulk-save-btn { width: 100%; }
         .modal-input { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; margin-bottom: 4px; font-family: inherit; box-sizing: border-box; }
         .modal-textarea { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; height: 80px; resize: vertical; font-family: inherit; box-sizing: border-box; margin-bottom: 4px; }
+
+        /* ── Marker-state key ───────────────────── */
+        .marker-key {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #aaa;
+            text-align: center;
+            letter-spacing: 0.2px;
+        }
+
+        /* ── Entrance intro overlay ─────────────── */
+        #intro-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            background: rgba(245,245,245,0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            cursor: pointer;
+            transition: opacity 0.8s ease;
+        }
+        #intro-overlay.visible { display: flex; }
+        #intro-overlay.dismissing { opacity: 0; }
+        #intro-inner { max-width: 560px; }
+        #intro-heading {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 40px;
+            font-weight: 600;
+            color: #1a1a1a;
+            letter-spacing: 0.5px;
+        }
+        #intro-body {
+            margin-top: 18px;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #555;
+        }
+        #intro-cue {
+            margin-top: 28px;
+            font-size: 18px;
+            color: #aaa;
+            letter-spacing: 2px;
+            animation: introCueBob 2.2s ease-in-out infinite;
+        }
+        @keyframes introCueBob {
+            0%, 100% { transform: translateY(0);   opacity: 0.5; }
+            50%      { transform: translateY(4px); opacity: 1;   }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #intro-overlay { transition: none; }
+            #intro-cue { animation: none; }
+        }
     </style>
 </head>
 <body>
@@ -699,32 +756,41 @@
 </div>
 </div>
 
+<!-- Entrance intro overlay (shown once per device) -->
+<div id="intro-overlay" aria-hidden="true">
+    <div id="intro-inner">
+        <h1 id="intro-heading" data-i18n="introHeading">DTES544</h1>
+        <p id="intro-body" data-i18n="introBody">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper. Duis autem vel eum iriure dolor in hendrerit.</p>
+        <div id="intro-cue" aria-hidden="true">↓</div>
+    </div>
+</div>
+
 <!-- Floating video panel -->
 <div id="video-panel">
     <div id="video-panel-header">
-        <span id="video-panel-title">Sözlü tarih görüşmesi (kayıt)</span>
+        <span id="video-panel-title" data-i18n="videoPanelTitle">Sözlü tarih görüşmesi (kayıt)</span>
         <button id="video-panel-close" onclick="closeVideoPanel()">✕</button>
     </div>
     <iframe id="video-panel-iframe" src="" allowfullscreen allow="autoplay; encrypted-media; fullscreen"></iframe>
 </div>
 
 <!-- Sidebar open button (shown when closed) -->
-<button id="sidebar-toggle" class="collapsed" onclick="toggleSidebar()">☰</button>
+<button id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
 <!-- Left control panel -->
-<div class="controls hidden">
+<div class="controls">
     <div class="sidebar-header">
         <div class="sidebar-top-row">
             <div>
                 <h1 data-i18n="panelTitle">Üsküdar Tanıklık Haritası</h1>
-                <p class="subtitle">Kuzguncuk Sözlü Tarih Projesi</p>
+                <p class="subtitle" data-i18n="subtitle">Kuzguncuk Sözlü Tarih Projesi</p>
             </div>
-            <button id="sidebar-close" onclick="toggleSidebar()" title="Kapat">✕</button>
+            <button id="sidebar-close" onclick="toggleSidebar()" data-i18n-title="close" title="Kapat">✕</button>
         </div>
     </div>
 
     <div class="search-wrap">
-        <input type="text" id="storySearch" class="search-input" placeholder="Anılarda ara…">
+        <input type="text" id="storySearch" class="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Anılarda ara…">
     </div>
 
     <div class="sidebar-body">
@@ -756,16 +822,19 @@
         <!-- STATS -->
         <div class="stats">
             <span class="stats-count" id="storyCount">—</span>
-            <span class="stats-label">Görünen Anı</span>
+            <span class="stats-label" data-i18n="statsLabel">Görünen Anı</span>
             <div class="stats-detail" id="activeFilters"></div>
         </div>
+
+        <!-- Marker-state key (glyphs functional, labels placeholder) -->
+        <div class="marker-key" data-i18n="markerKey">● DTES544 · ◌ DTES544 · ∿ DTES544</div>
     </div>
 </div>
 
 <!-- Right counter -->
 <div class="counter">
     <strong id="markerCount">0</strong>
-    <div style="font-size: 10px; color: #bbb; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px;">Anı</div>
+    <div style="font-size: 10px; color: #bbb; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px;" data-i18n="counterLabel">Anı</div>
 </div>
 
 <!-- Admin login modal -->
@@ -778,7 +847,7 @@
         <input type="password" id="admin-password" placeholder="••••••••">
         <div class="modal-error" id="admin-error" data-i18n="adminError">Kullanıcı adı veya şifre hatalı.</div>
         <div class="modal-actions">
-            <button class="btn-secondary" onclick="closeAdminLogin()">İptal</button>
+            <button class="btn-secondary" onclick="closeAdminLogin()" data-i18n="cancelBtn">İptal</button>
             <button class="btn-primary" onclick="submitAdminLogin()" data-i18n="adminLoginBtn">Giriş</button>
         </div>
     </div>
@@ -834,7 +903,7 @@
                 <input type="text" id="edit-period" class="modal-input"
                     data-i18n-placeholder="periodPlaceholder" placeholder="1980ler, Çocukluk…">
 
-                <span class="modal-field-label">Konum *</span>
+                <span class="modal-field-label" data-i18n="locationLabel">Konum *</span>
                 <div class="coord-row">
                     <div><input type="number" id="edit-lat" step="0.00001"
                         data-i18n-placeholder="latLabel" placeholder="Enlem"></div>
@@ -901,7 +970,11 @@
         {
             id: 1,
             person: "1",
-            title: "Kilise Bahçesinin Anısı",
+            title: {
+                tr: "Kilise Bahçesinin Anısı",
+                en: "Memory of the Church Garden",
+                hy: "Եկեղեցւոյ պարտէզին յուշը"
+            },
             lat: 41.0285,
             lng: 29.0330,
             emotions: ["purple", "green"],
@@ -910,7 +983,11 @@
         {
             id: 2,
             person: "1",
-            title: "Sokakta Oynanan Oyunlar",
+            title: {
+                tr: "Sokakta Oynanan Oyunlar",
+                en: "Games Played in the Street",
+                hy: "Փողոցը խաղցուած խաղերը"
+            },
             lat: 41.0288,
             lng: 29.0325,
             emotions: ["orange"],
@@ -919,7 +996,11 @@
         {
             id: 3,
             person: "1",
-            title: "Pazarın Renkli Günleri",
+            title: {
+                tr: "Pazarın Renkli Günleri",
+                en: "Market's Colorful Days",
+                hy: "Շուկային գունագեղ օրերը"
+            },
             lat: 41.0290,
             lng: 29.0335,
             emotions: ["green", "orange"],
@@ -928,7 +1009,11 @@
         {
             id: 4,
             person: "1",
-            title: "Kaybolan Evler",
+            title: {
+                tr: "Kaybolan Evler",
+                en: "Disappeared Houses",
+                hy: "Անհետացած տուները"
+            },
             lat: 41.0283,
             lng: 29.0328,
             emotions: ["blue", "purple"],
@@ -938,7 +1023,11 @@
         {
             id: 5,
             person: "1",
-            title: "Geçmiş Zamanın Haykırışı",
+            title: {
+                tr: "Geçmiş Zamanın Haykırışı",
+                en: "Cry of the Past",
+                hy: "Անցեալի աղաղակը"
+            },
             lat: 41.0292,
             lng: 29.0333,
             emotions: ["red"],
@@ -949,7 +1038,11 @@
         {
             id: 6,
             person: "2",
-            title: "Erkek Kahvesinin Dönemesi",
+            title: {
+                tr: "Erkekler Kahvesi Dönemi",
+                en: "The Men's Coffeehouse Era",
+                hy: "Այրերու սրճարանի շրջանը"
+            },
             lat: 41.0286,
             lng: 29.0332,
             emotions: ["orange", "purple"],
@@ -958,7 +1051,11 @@
         {
             id: 7,
             person: "2",
-            title: "Ticaret Yollarının Birleştiği Yer",
+            title: {
+                tr: "Ticaret Yollarının Birleştiği Yer",
+                en: "Crossroads of Trade Routes",
+                hy: "Առեւտրական ճանապարհներու խաչմերուկը"
+            },
             lat: 41.0289,
             lng: 29.0329,
             emotions: ["green"],
@@ -967,7 +1064,11 @@
         {
             id: 8,
             person: "2",
-            title: "Baba'nın Mağazası",
+            title: {
+                tr: "Baba'nın Mağazası",
+                en: "Father's Shop",
+                hy: "Հօր խանութը"
+            },
             lat: 41.0284,
             lng: 29.0326,
             emotions: ["purple", "green"],
@@ -976,7 +1077,11 @@
         {
             id: 9,
             person: "2",
-            title: "Demirlemeyi Öğrenme",
+            title: {
+                tr: "Demirlemeyi Öğrenme",
+                en: "Learning to Anchor",
+                hy: "Խարսխել սորվիլը"
+            },
             lat: 41.0291,
             lng: 29.0331,
             emotions: ["blue"],
@@ -987,7 +1092,11 @@
         {
             id: 10,
             person: "3",
-            title: "Evdeki Cıvata Dokumalar",
+            title: {
+                tr: "Evdeki Cıvata ve Dokumalar",
+                en: "Bolts and Weavings at Home",
+                hy: "Տան պտուտակներն ու հիւսուածքները"
+            },
             lat: 41.0287,
             lng: 29.0327,
             emotions: ["green"],
@@ -996,7 +1105,11 @@
         {
             id: 11,
             person: "3",
-            title: "Anne'nin Mutfağında",
+            title: {
+                tr: "Anne'nin Mutfağında",
+                en: "In Mother's Kitchen",
+                hy: "Մօր խոհանոցին մէջ"
+            },
             lat: 41.0282,
             lng: 29.0334,
             emotions: ["orange", "green"],
@@ -1005,7 +1118,11 @@
         {
             id: 12,
             person: "3",
-            title: "Bitişik Evlerin Duvarları",
+            title: {
+                tr: "Bitişik Evlerin Duvarları",
+                en: "Walls of Adjacent Houses",
+                hy: "Կից տուներու պատերը"
+            },
             lat: 41.0293,
             lng: 29.0330,
             emotions: ["purple"],
@@ -1014,7 +1131,11 @@
         {
             id: 13,
             person: "3",
-            title: "Hastalık Döneminde Yalnızlık",
+            title: {
+                tr: "Hastalık Döneminde Yalnızlık",
+                en: "Loneliness in Time of Illness",
+                hy: "Հիւանդութեան շրջանի առանձնութիւնը"
+            },
             lat: 41.0285,
             lng: 29.0324,
             emotions: ["blue", "black"],
@@ -1025,7 +1146,11 @@
         {
             id: 14,
             person: "4",
-            title: "Boğaz'ı Seyretme Yeri",
+            title: {
+                tr: "Boğaz'ı Seyretme Yeri",
+                en: "Bosphorus Viewing Place",
+                hy: "Պոսֆորը դիտելու վայրը"
+            },
             lat: 41.0288,
             lng: 29.0336,
             emotions: ["orange"],
@@ -1034,7 +1159,11 @@
         {
             id: 15,
             person: "4",
-            title: "Nersesyan Varjaran Okulu",
+            title: {
+                tr: "Nersesyan Varjaran Okulu",
+                en: "Nersesian School",
+                hy: "Ներսէսեան Վարժարան"
+            },
             lat: 41.0281,
             lng: 29.0329,
             emotions: ["green", "purple"],
@@ -1044,7 +1173,11 @@
         {
             id: 16,
             person: "4",
-            title: "Kütüphanenin Kokusunda Kayıp",
+            title: {
+                tr: "Kütüphanenin Kokusunda Kayıp",
+                en: "Lost in the Scent of the Library",
+                hy: "Գրադարանի բոյրին մէջ կորսուած"
+            },
             lat: 41.0290,
             lng: 29.0323,
             emotions: ["green", "purple"],
@@ -1054,23 +1187,35 @@
         {
             id: 17,
             person: "4",
-            title: "Gemiyi Görememenin Üzüntüsü",
+            title: {
+                tr: "Gemiyi Görememenin Üzüntüsü",
+                en: "Sadness of Not Seeing the Ship",
+                hy: "Նաւը չտեսնելու տխրութիւնը"
+            },
             lat: 41.0284,
             lng: 29.0332,
             emotions: ["blue", "red"],
             narrative: "Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe.",
         },
-       {
+        {
             id: 18,
             person: "Mikail",
-            title: "Demirci Dükkânı",
+            title: {
+                tr: "Demirci Dükkânı",
+                en: "The Blacksmith Shop",
+                hy: "Դարբնոցը"
+            },
             lat: 41.03390715820939,
             lng: 29.031161149808515,
             locationKnown: false,
             emotions: ["black", "purple"],
-            narrative: "Bu hikaye, 1942 Varlık Vergisi ile hayatı altüst olan, iş yerini kaybedip çalışma kampına sürgün edilen Kuzguncuklu bir demirci ustasını anlatıyor.",
+            narrative: {
+                tr: "Bu hikaye, 1942 Varlık Vergisi ile hayatı altüst olan, iş yerini kaybedip çalışma kampına sürgün edilen Kuzguncuklu bir demirci ustasını anlatıyor.",
+                en: "This story tells of a blacksmith master from Kuzguncuk whose life was turned upside down by the 1942 Wealth Tax (Varlık Vergisi), who lost his workplace and was exiled to a labor camp.",
+                hy: "Այս պատմութիւնը կը պատմէ գուզկունճուքցի դարբին վարպետի մը մասին, որուն կեանքը տակնուվրայ եղաւ 1942-ի Ունեցուածքի Տուրքին (Varlık Vergisi) պատճառով, եւ որ կորսնցնելով իր գործատեղին՝ աքսորուեցաւ աշխատանքային ճամբար։"
+            },
             videoUrl: "https://www.youtube.com/embed/kmkJ-TqVH_Y"
-       }, 
+        },
     ];
     
     // Emotion colors
@@ -1086,6 +1231,13 @@
     // People names
     const people = ['1', '2', '3', '4', 'Mikail'];
 
+    // Escape user-controlled text before injecting into innerHTML / setHTML.
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+        }[ch]));
+    }
+
     // ========================================
     // i18n
     // ========================================
@@ -1094,7 +1246,7 @@
             panelTitle:        'Burada Yaşadık',
             peopleHeader:      'Kişiler',
             emotionsHeader:    'Duygular',
-            toggleNone:        'Hiçbirini seçme',
+            toggleNone:        'Seçimleri temizle',
             searchPlaceholder: 'Ara…',
             filterAll:         'Tümü',
             storyCount:        n => `${n} tanıklık`,
@@ -1112,16 +1264,16 @@
             titleLabel:        'Başlık',
             narrativeLabel:    'Anlatı',
             periodLabel:       'Dönem (isteğe bağlı)',
-            periodPlaceholder: '1980ler, Çocukluk…',
+            periodPlaceholder: "1980'ler, Çocukluk…",
             latLabel:          'Enlem',
             lngLabel:          'Boylam',
-            ghostLabel:        'Mevcut değil',
+            ghostLabel:        'Artık mevcut değil',
             emotionLabel:      'Duygular',
             videoLabel:        'YouTube URL (isteğe bağlı)',
-            bulkPersonLabel:   'Görüşmeci:',
+            bulkPersonLabel:   'Anlatıcı:',
             bulkPersonHint:    '← tüm kartlara uygulanır',
             errorRequired:     'Zorunlu alanları doldurun ve en az bir duygu seçin.',
-            legendActive:      'Mevcut mekan',
+            legendActive:      'Mevcut mekân',
             legendGhost:       'Artık mevcut değil',
             watchBtn:          '▶ Tanıklığı İzle',
             popupPeriod:       'Dönem',
@@ -1130,6 +1282,31 @@
             adminPass:         'Şifre',
             adminError:        'Kullanıcı adı veya şifre hatalı.',
             adminLoginBtn:     'Giriş',
+            introHeading:      'DTES544',
+            introBody:         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper. Duis autem vel eum iriure dolor in hendrerit.',
+            markerKey:         '● DTES544 · ◌ DTES544 · ∿ DTES544',
+            pageTitle:         'Üsküdar Tanıklık Haritası',
+            videoPanelTitle:   'Sözlü tarih görüşmesi (kayıt)',
+            subtitle:          'Kuzguncuk Sözlü Tarih Projesi',
+            close:             'Kapat',
+            statsLabel:        'Görünen Anı',
+            counterLabel:      'Anı',
+            locationLabel:     'Konum *',
+            bulkCardNum:       n => `Tanıklık ${n}`,
+            deleteConfirm:     'Bu tanıklığı silmek istediğinize emin misiniz?',
+            bulkSaveError:     'Bazı kartlarda hata oluştu ve atlandı. Geçerli tanıklıklar kaydedildi.',
+            toggleAll:         'Hepsini seç',
+            statsPeopleCount:  (n, total) => `${n}/${total} kişi`,
+            statsPeopleAll:    'Tüm kişiler',
+            statsEmotionsCount: (n, total) => `${n}/${total} duygu`,
+            statsEmotionsAll:  'tüm duygular',
+            statsSearchActive: q => `"${q}" araması`,
+            emo_blue:          'Üzüntü',
+            emo_purple:        'Nostalji',
+            emo_orange:        'Mutluluk',
+            emo_green:         'Aidiyet',
+            emo_red:           'Öfke',
+            emo_black:         'Korku',
         },
         en: {
             panelTitle:        'We Lived Here',
@@ -1171,48 +1348,97 @@
             adminPass:         'Password',
             adminError:        'Incorrect username or password.',
             adminLoginBtn:     'Login',
+            introHeading:      'DTES544',
+            introBody:         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper. Duis autem vel eum iriure dolor in hendrerit.',
+            markerKey:         '● DTES544 · ◌ DTES544 · ∿ DTES544',
+            pageTitle:         'Üsküdar Testimony Map',
+            videoPanelTitle:   'Oral history interview (recording)',
+            subtitle:          'Kuzguncuk Oral History Project',
+            close:             'Close',
+            statsLabel:        'Visible stories',
+            counterLabel:      'Stories',
+            locationLabel:     'Location *',
+            bulkCardNum:       n => `Story ${n}`,
+            deleteConfirm:     'Are you sure you want to delete this testimony?',
+            bulkSaveError:     'Some cards had errors and were skipped. Valid stories were saved.',
+            toggleAll:         'Select all',
+            statsPeopleCount:  (n, total) => `${n}/${total} people`,
+            statsPeopleAll:    'All people',
+            statsEmotionsCount: (n, total) => `${n}/${total} emotions`,
+            statsEmotionsAll:  'all emotions',
+            statsSearchActive: q => `search "${q}"`,
+            emo_blue:          'Sadness',
+            emo_purple:        'Nostalgia',
+            emo_orange:        'Happiness',
+            emo_green:         'Belonging',
+            emo_red:           'Anger',
+            emo_black:         'Fear',
         },
         hy: {
-            // Western Armenian — all placeholders except where provided by user
-            panelTitle:        '[ՀՅ]',
-            peopleHeader:      '[ՀՅ]',
-            emotionsHeader:    '[ՀՅ]',
-            toggleNone:        '[ՀՅ]',
-            searchPlaceholder: '[ՀՅ]',
-            filterAll:         '[ՀՅ]',
-            storyCount:        n => `[ՀՅ] ${n}`,
-            editBtn:           '[ՀՅ]',
-            deleteBtn:         '[ՀՅ]',
-            backBtn:           '[ՀՅ]',
-            saveBtn:           '[ՀՅ]',
-            cancelBtn:         '[ՀՅ]',
-            addCardBtn:        '[ՀՅ]',
-            saveAllBtn:        n => `[ՀՅ] (${n})`,
-            tabStories:        '[ՀՅ]',
-            tabBulk:           '[ՀՅ]',
-            modalTitle:        '[ՀՅ]',
-            personLabel:       '[ՀՅ]',
-            titleLabel:        '[ՀՅ]',
-            narrativeLabel:    '[ՀՅ]',
-            periodLabel:       '[ՀՅ]',
-            periodPlaceholder: '[ՀՅ]',
-            latLabel:          '[ՀՅ]',
-            lngLabel:          '[ՀՅ]',
+            panelTitle:        'Հոս ապրեցանք',
+            peopleHeader:      'Մարդիկ',
+            emotionsHeader:    'Զգացումներ',
+            toggleNone:        'Ոչ մէկը ընտրել',
+            searchPlaceholder: 'Փնտռել…',
+            filterAll:         'Բոլորը',
+            storyCount:        n => `${n} վկայութիւն`,
+            editBtn:           'Խմբագրել',
+            deleteBtn:         'Ջնջել',
+            backBtn:           '← Վերադառնալ ցուցակին',
+            saveBtn:           'Պահել փոփոխութիւնները',
+            cancelBtn:         'Չեղարկել',
+            addCardBtn:        '+ Աւելցնել վկայութիւն',
+            saveAllBtn:        n => `Պահել բոլորը (${n} վկայութիւն)`,
+            tabStories:        'Վկայութիւններ',
+            tabBulk:           'Հաւաքական աւելցնել',
+            modalTitle:        'Վկայութիւններու կառավարում',
+            personLabel:       'Անձ',
+            titleLabel:        'Վերնագիր',
+            narrativeLabel:    'Պատում',
+            periodLabel:       'Ժամանակաշրջան (ոչ պարտադիր)',
+            periodPlaceholder: '1980-ականներ, Մանկութիւն…',
+            latLabel:          'Լայնութիւն',
+            lngLabel:          'Երկայնութիւն',
             ghostLabel:        'Այլեւս չկայ',
-            emotionLabel:      '[ՀՅ]',
-            videoLabel:        '[ՀՅ]',
-            bulkPersonLabel:   '[ՀՅ]',
-            bulkPersonHint:    '[ՀՅ]',
-            errorRequired:     '[ՀՅ]',
-            legendActive:      '[ՀՅ]',
+            emotionLabel:      'Զգացումներ',
+            videoLabel:        'YouTube URL (ոչ պարտադիր)',
+            bulkPersonLabel:   'Պատմող:',
+            bulkPersonHint:    '← կը կիրարկուի բոլոր քարտերուն',
+            errorRequired:     'Լրացուցէ՛ք պարտադիր դաշտերը եւ ընտրեցէ՛ք առնուազն մէկ զգացում։',
+            legendActive:      'Գոյութիւն ունեցող վայր',
             legendGhost:       'Այլեւս չկայ',
-            watchBtn:          '[ՀՅ]',
-            popupPeriod:       '[ՀՅ]',
-            adminLoginTitle:   '[ՀՅ]',
-            adminUser:         '[ՀՅ]',
-            adminPass:         '[ՀՅ]',
-            adminError:        '[ՀՅ]',
-            adminLoginBtn:     '[ՀՅ]',
+            watchBtn:          '▶ Դիտել վկայութիւնը',
+            popupPeriod:       'Ժամանակաշրջան',
+            adminLoginTitle:   'Վարչական մուտք',
+            adminUser:         'Մուտքանուն',
+            adminPass:         'Գաղտնաբառ',
+            adminError:        'Սխալ մուտքանուն կամ գաղտնաբառ։',
+            adminLoginBtn:     'Մուտք գործել',
+            introHeading:      'DTES544',
+            introBody:         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper. Duis autem vel eum iriure dolor in hendrerit.',
+            markerKey:         '● DTES544 · ◌ DTES544 · ∿ DTES544',
+            pageTitle:         'Իւսկիւտարի Վկայութեանց Քարտէս',
+            videoPanelTitle:   'Բանաւոր պատմութեան հարցազրոյց (ձայնագրութիւն)',
+            subtitle:          'Գուզկունճուքի Բանաւոր Պատմութեան Ծրագիր',
+            close:             'Գոցել',
+            statsLabel:        'Երեւցող վկայութիւններ',
+            counterLabel:      'Վկայութիւններ',
+            locationLabel:     'Դիրք *',
+            bulkCardNum:       n => `Վկայութիւն ${n}`,
+            deleteConfirm:     'Վստա՞հ էք, թէ կը փափաքիք ջնջել այս վկայութիւնը։',
+            bulkSaveError:     'Որոշ քարտեր սխալներ ունէին եւ շրջանցուեցան։ Վաւեր վկայութիւնները պահուեցան։',
+            toggleAll:         'Բոլորը ընտրել',
+            statsPeopleCount:  (n, total) => `${n}/${total} անձ`,
+            statsPeopleAll:    'Բոլոր անձերը',
+            statsEmotionsCount: (n, total) => `${n}/${total} զգացում`,
+            statsEmotionsAll:  'բոլոր զգացումները',
+            statsSearchActive: q => `որոնում "${q}"`,
+            emo_blue:          'Տխրութիւն',
+            emo_purple:        'Կարօտ',
+            emo_orange:        'Ուրախութիւն',
+            emo_green:         'Պատկանելիութիւն',
+            emo_red:           'Բարկութիւն',
+            emo_black:         'Վախ',
         },
     };
 
@@ -1228,6 +1454,8 @@
         currentLang = lang;
         localStorage.setItem('uskudar-lang', lang);
 
+        document.title = t('pageTitle');
+
         // Static text nodes
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.dataset.i18n;
@@ -1239,6 +1467,13 @@
             const key = el.dataset.i18nPlaceholder;
             if (i18n[lang][key] !== undefined) {
                 el.placeholder = i18n[lang][key];
+            }
+        });
+        // Title attributes
+        document.querySelectorAll('[data-i18n-title]').forEach(el => {
+            const key = el.dataset.i18nTitle;
+            if (i18n[lang][key] !== undefined) {
+                el.title = i18n[lang][key];
             }
         });
 
@@ -1255,6 +1490,17 @@
         // renderStoryList is defined in admin functions — guard until available
         if (typeof renderStoryList === 'function') renderStoryList();
 
+        // Update all marker popups to reflect the new language
+        if (window._mapApi && typeof window._mapApi.getPopupHTML === 'function') {
+            stories.forEach(story => {
+                const marker = markerObjects[story.id];
+                if (marker) {
+                    const popup = marker.getPopup();
+                    if (popup) popup.setHTML(window._mapApi.getPopupHTML(story));
+                }
+            });
+        }
+
         // Close any open popups — they contain translated strings (watchBtn, popupPeriod)
         // that would be stale. User reopens to get the new language.
         document.querySelectorAll('.mapboxgl-popup').forEach(p => p.remove());
@@ -1268,22 +1514,44 @@
     // STORAGE — seed + load
     // ========================================
     function seedAndLoadStories() {
+        const loadSeed = () => SEED_STORIES.forEach(s =>
+            stories.push({ ...s, period: s.period ?? '', isGhost: s.isGhost ?? false }));
+
         const saved = localStorage.getItem('uskudar-stories');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            parsed.forEach(s => {
-                // Backfill new fields on old objects
-                if (s.period === undefined) s.period = '';
-                if (s.isGhost === undefined) s.isGhost = false;
-                stories.push(s);
-            });
-        } else if (!localStorage.getItem('uskudar-seeded')) {
-            // Not seeded yet and no stories — load SEED_STORIES as runtime source
-            // until first admin login triggers seedStoriesFromHardcoded()
-            SEED_STORIES.forEach(s => stories.push({ ...s, period: s.period ?? '', isGhost: s.isGhost ?? false }));
+        if (!saved) {
+            // Nothing stored yet — show seed data until the first admin login
+            // triggers seedStoriesFromHardcoded().
+            if (!localStorage.getItem('uskudar-seeded')) loadSeed();
+            return;
         }
+
+        let parsed;
+        try {
+            parsed = JSON.parse(saved);
+        } catch (err) {
+            // Corrupt storage would otherwise throw here and blank the whole map.
+            console.error('Corrupt uskudar-stories in localStorage — falling back to seed data.', err);
+            loadSeed();
+            return;
+        }
+        if (!Array.isArray(parsed)) { loadSeed(); return; }
+
+        parsed.forEach(s => {
+            // Backfill new fields on old objects
+            if (s.period === undefined) s.period = '';
+            if (s.isGhost === undefined) s.isGhost = false;
+            stories.push(s);
+        });
     }
     seedAndLoadStories();
+
+    // Ensure every person present in the loaded stories has a filter entry —
+    // otherwise admin-added interviewers (and their markers) vanish after reload.
+    stories.forEach(s => {
+        if (s.person !== undefined && s.person !== '' && !people.includes(s.person)) {
+            people.push(s.person);
+        }
+    });
 
     // ========================================
     // STATE MANAGEMENT
@@ -1341,11 +1609,11 @@
                 if (allSelected) {
                     activePeople.clear();
                     grid.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
-                    document.getElementById('peopleToggleAll').textContent = 'Hepsini seç';
+                    document.getElementById('peopleToggleAll').textContent = t('toggleAll');
                 } else {
                     people.forEach(p => activePeople.add(p));
                     grid.querySelectorAll('.chip').forEach(b => b.classList.add('active'));
-                    document.getElementById('peopleToggleAll').textContent = 'Hiçbirini seçme';
+                    document.getElementById('peopleToggleAll').textContent = t('toggleNone');
                 }
                 updateMarkerVisibility();
                 updateStats();
@@ -1377,7 +1645,7 @@
                 }
             }
             document.getElementById('peopleToggleAll').textContent =
-                activePeople.size === people.length ? 'Hiçbirini seçme' : 'Hepsini seç';
+                activePeople.size === people.length ? t('toggleNone') : t('toggleAll');
             updateMarkerVisibility();
             updateStats();
         }
@@ -1391,12 +1659,12 @@
             grid.innerHTML = '';
             const allEmotionKeys = Object.keys(emotionData);
 
-            Object.entries(emotionData).forEach(([emotion, { hex, label }]) => {
+            Object.entries(emotionData).forEach(([emotion, { hex }]) => {
                 const btn = document.createElement('button');
                 btn.className = 'emotion-chip active';
                 btn.style.backgroundColor = hex;
                 btn.style.borderColor = hex;
-                btn.innerHTML = label;
+                btn.innerHTML = t(`emo_${emotion}`);
                 btn.dataset.emotion = emotion;
                 btn.onclick = () => toggleEmotion(emotion, btn);
                 grid.appendChild(btn);
@@ -1411,7 +1679,7 @@
                         b.style.backgroundColor = '';
                         b.style.borderColor = '#e5e5e5';
                     });
-                    document.getElementById('emotionToggleAll').textContent = 'Hepsini seç';
+                    document.getElementById('emotionToggleAll').textContent = t('toggleAll');
                 } else {
                     allEmotionKeys.forEach(e => activeEmotions.add(e));
                     grid.querySelectorAll('.emotion-chip').forEach(b => {
@@ -1420,7 +1688,7 @@
                         b.style.backgroundColor = emotionData[emo].hex;
                         b.style.borderColor = emotionData[emo].hex;
                     });
-                    document.getElementById('emotionToggleAll').textContent = 'Hiçbirini seçme';
+                    document.getElementById('emotionToggleAll').textContent = t('toggleNone');
                 }
                 updateMarkerVisibility();
                 updateStats();
@@ -1460,7 +1728,7 @@
                 }
             }
             document.getElementById('emotionToggleAll').textContent =
-                activeEmotions.size === allEmotionKeys.length ? 'Hiçbirini seçme' : 'Hepsini seç';
+                activeEmotions.size === allEmotionKeys.length ? t('toggleNone') : t('toggleAll');
             updateMarkerVisibility();
             updateStats();
         }
@@ -1471,10 +1739,12 @@
 
         function storyMatchesSearch(story) {
             if (!searchQuery) return true;
+            const title = typeof story.title === 'object' ? (story.title[currentLang] ?? story.title.tr) : story.title;
+            const narrative = typeof story.narrative === 'object' ? (story.narrative[currentLang] ?? story.narrative.tr) : story.narrative;
             return (
-                story.title.toLowerCase().includes(searchQuery) ||
+                title.toLowerCase().includes(searchQuery) ||
                 story.person.toLowerCase().includes(searchQuery) ||
-                story.narrative.toLowerCase().includes(searchQuery)
+                narrative.toLowerCase().includes(searchQuery)
             );
         }
 
@@ -1509,17 +1779,17 @@
 
             const parts = [];
             if (personCount < totalPeople) {
-                parts.push(`${personCount}/${totalPeople} kişi`);
+                parts.push(t('statsPeopleCount')(personCount, totalPeople));
             } else {
-                parts.push('Tüm kişiler');
+                parts.push(t('statsPeopleAll'));
             }
             if (emotionCount < totalEmotions) {
-                parts.push(`${emotionCount}/${totalEmotions} duygu`);
+                parts.push(t('statsEmotionsCount')(emotionCount, totalEmotions));
             } else {
-                parts.push('tüm duygular');
+                parts.push(t('statsEmotionsAll'));
             }
             if (searchQuery) {
-                parts.push(`"${searchQuery}" araması`);
+                parts.push(t('statsSearchActive')(searchQuery));
             }
             document.getElementById('activeFilters').textContent = parts.join(' · ');
         }
@@ -1751,6 +2021,42 @@
             return canvas;
         }
 
+        function getPopupHTML(story) {
+            // Emotion tags for popup
+            const emotionTags = story.emotions.map(e =>
+                `<span style="display:inline-flex;align-items:center;gap:4px;background:${emotionData[e].hex}22;
+                 color:${emotionData[e].hex};border:1px solid ${emotionData[e].hex}55;
+                 border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;">
+                 <span style="width:7px;height:7px;border-radius:50%;background:${emotionData[e].hex};display:inline-block;"></span>
+                 ${t(`emo_${e}`)}</span>`
+            ).join(' ');
+
+            // Create popup with video
+            const periodHTML = story.period
+                ? `<div style="font-size:11px;color:#888;margin-bottom:0.5rem;">
+                       <strong>${t('popupPeriod')}:</strong> ${escapeHtml(story.period)}
+                   </div>`
+                : '';
+
+            const title = typeof story.title === 'object' ? (story.title[currentLang] ?? story.title.tr) : story.title;
+            const narrative = typeof story.narrative === 'object' ? (story.narrative[currentLang] ?? story.narrative.tr) : story.narrative;
+
+            return `
+                <h3>${escapeHtml(title)}</h3>
+                <div class="person-name"><strong>${escapeHtml(story.person)}</strong></div>
+                <div style="margin-bottom:0.75rem;">${emotionTags}</div>
+                ${periodHTML}
+                <p>${escapeHtml(narrative)}</p>
+                ${story.videoUrl ? `<div style="text-align:center; margin-top: 0.75rem;">
+                    <button class="play-video-btn"
+                        data-video-url="${escapeHtml(story.videoUrl)}"
+                        data-video-title="${escapeHtml(title + ' — ' + story.person)}">
+                        ${t('watchBtn')}
+                    </button>
+                </div>` : ''}
+            `;
+        }
+
         function addMarkerForStory(story) {
             // Outer el: used by Mapbox for positioning (transform must not be overridden)
             const el = document.createElement('div');
@@ -1767,42 +2073,12 @@
                 !!story.isGhost
             ));
             el.appendChild(inner);
-
-            // Emotion tags for popup
-            const emotionTags = story.emotions.map(e =>
-                `<span style="display:inline-flex;align-items:center;gap:4px;background:${emotionData[e].hex}22;
-                 color:${emotionData[e].hex};border:1px solid ${emotionData[e].hex}55;
-                 border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;">
-                 <span style="width:7px;height:7px;border-radius:50%;background:${emotionData[e].hex};display:inline-block;"></span>
-                 ${emotionData[e].label}</span>`
-            ).join(' ');
-
-            // Create popup with video
-            const periodHTML = story.period
-                ? `<div style="font-size:11px;color:#888;margin-bottom:0.5rem;">
-                       <strong>${t('popupPeriod')}:</strong> ${story.period}
-                   </div>`
-                : '';
-
-            const popupHTML = `
-                <h3>${story.title}</h3>
-                <div class="person-name"><strong>${story.person}</strong></div>
-                <div style="margin-bottom:0.75rem;">${emotionTags}</div>
-                ${periodHTML}
-                <p>${story.narrative}</p>
-                ${story.videoUrl ? `<div style="text-align:center; margin-top: 0.75rem;">
-                    <button class="play-video-btn"
-                        onclick="openVideoPanel('${story.videoUrl}', '${story.title} — ${story.person}')">
-                        ${t('watchBtn')}
-                    </button>
-                </div>` : ''}
-            `;
             
             const popup = new mapboxgl.Popup({ 
                 offset: 15,
                 maxWidth: '420px',
                 closeButton: true
-            }).setHTML(popupHTML);
+            }).setHTML(getPopupHTML(story));
             
             // Create marker (draggable for coordinate adjustment)
             const marker = new mapboxgl.Marker({ element: el, draggable: true })
@@ -1921,7 +2197,7 @@
         updateStats();
 
         // Expose API for admin panel (add markers after map load)
-        window._mapApi = { addMarkerForStory, buildPeopleFilter, buildEmotionFilter, updateMarkerVisibility, updateStats };
+        window._mapApi = { addMarkerForStory, buildPeopleFilter, buildEmotionFilter, updateMarkerVisibility, updateStats, getPopupHTML };
 
         // Map legend removed — no longer needed
     });
@@ -2016,13 +2292,34 @@
     async function submitAdminLogin() {
         const u = document.getElementById('admin-username').value.trim();
         const p = document.getElementById('admin-password').value;
-        const hash = await sha256(p);
+        const errEl = document.getElementById('admin-error');
+
+        // crypto.subtle exists only in a secure context (https:// or localhost).
+        // Opened via file:// or plain http it is undefined; the old code threw an
+        // unhandled rejection here so the button looked dead. Surface it instead.
+        if (!crypto?.subtle) {
+            errEl.textContent = 'Yönetici girişi güvenli bağlam ister (https:// veya localhost). · Admin login requires a secure context (https:// or localhost).';
+            errEl.style.display = 'block';
+            return;
+        }
+
+        let hash;
+        try {
+            hash = await sha256(p);
+        } catch (err) {
+            console.error('Password hashing failed:', err);
+            errEl.textContent = 'Giriş sırasında bir hata oluştu. · Something went wrong during login.';
+            errEl.style.display = 'block';
+            return;
+        }
+
         if (u === ADMIN_CREDS.username && hash === ADMIN_CREDS.passwordHash) {
             closeAdminLogin();
             seedStoriesFromHardcoded();
             openStoryManagement();
         } else {
-            document.getElementById('admin-error').style.display = 'block';
+            errEl.textContent = t('adminError');
+            errEl.style.display = 'block';
         }
     }
 
@@ -2057,7 +2354,7 @@
         const sel = document.getElementById('mgmt-person-filter');
         const unique = [...new Set(stories.map(s => s.person))].sort();
         sel.innerHTML = `<option value="">${t('filterAll')}</option>` +
-            unique.map(p => `<option value="${p}">${p}</option>`).join('');
+            unique.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
     }
 
     function renderStoryList() {
@@ -2067,9 +2364,11 @@
         const count  = document.getElementById('mgmt-count');
         if (!list) return;
 
+        const getStoryTitle = s => typeof s.title === 'object' ? (s.title[currentLang] ?? s.title.tr) : s.title;
+
         const filtered = stories.filter(s =>
             (!person || s.person === person) &&
-            (!query  || s.title.toLowerCase().includes(query) || s.person.toLowerCase().includes(query))
+            (!query  || getStoryTitle(s).toLowerCase().includes(query) || s.person.toLowerCase().includes(query))
         );
 
         list.innerHTML = filtered.length === 0
@@ -2077,8 +2376,8 @@
             : filtered.map(s => `
                 <div class="mgmt-story-row">
                     <div class="mgmt-story-info">
-                        <strong>${s.title}${s.isGhost ? ' 👻' : ''}</strong>
-                        <span>· ${s.person}</span>
+                        <strong>${escapeHtml(getStoryTitle(s))}${s.isGhost ? ' 👻' : ''}</strong>
+                        <span>· ${escapeHtml(s.person)}</span>
                     </div>
                     <div class="mgmt-story-actions">
                         <button class="mgmt-btn-edit" onclick="openEditView(${s.id})">${t('editBtn')}</button>
@@ -2101,9 +2400,12 @@
         if (!story) return;
         editingStoryId = id;
 
+        const title = typeof story.title === 'object' ? (story.title[currentLang] ?? story.title.tr) : story.title;
+        const narrative = typeof story.narrative === 'object' ? (story.narrative[currentLang] ?? story.narrative.tr) : story.narrative;
+
         document.getElementById('edit-person').value    = story.person;
-        document.getElementById('edit-title').value     = story.title;
-        document.getElementById('edit-narrative').value = story.narrative;
+        document.getElementById('edit-title').value     = title;
+        document.getElementById('edit-narrative').value = narrative;
         document.getElementById('edit-period').value    = story.period || '';
         document.getElementById('edit-lat').value       = story.lat;
         document.getElementById('edit-lng').value       = story.lng;
@@ -2114,7 +2416,7 @@
         // Build emotion checkboxes
         const wrap = document.getElementById('edit-emotion-checkboxes');
         wrap.innerHTML = '';
-        Object.entries(emotionData).forEach(([key, {hex, label}]) => {
+        Object.entries(emotionData).forEach(([key, {hex}]) => {
             const cb  = document.createElement('input');
             cb.type   = 'checkbox';
             cb.value  = key;
@@ -2122,7 +2424,7 @@
             cb.checked = story.emotions.includes(key);
             const lbl = document.createElement('label');
             lbl.htmlFor = cb.id;
-            lbl.textContent = ' ' + label;
+            lbl.textContent = ' ' + t(`emo_${key}`);
             lbl.className = 'emotion-check-label' + (cb.checked ? ' checked' : '');
             if (cb.checked) { lbl.style.backgroundColor = hex; lbl.style.borderColor = hex; }
             cb.addEventListener('change', () => {
@@ -2189,7 +2491,7 @@
     }
 
     function deleteStory(id) {
-        if (!confirm('Bu tanıklığı silmek istediğinize emin misiniz?')) return;
+        if (!confirm(t('deleteConfirm'))) return;
         const idx = stories.findIndex(s => s.id === id);
         if (idx === -1) return;
         stories.splice(idx, 1);
@@ -2213,18 +2515,18 @@
         card.dataset.cardIdx = idx;
 
         // Build emotion pills for this card
-        const emotionPills = Object.entries(emotionData).map(([key, {hex, label}]) =>
+        const emotionPills = Object.entries(emotionData).map(([key, {hex}]) =>
             `<input type="checkbox" id="bc-em-${idx}-${key}" value="${key}"
                 style="display:none"
                 onchange="bcEmotionToggle(this,'${hex}')">
              <label for="bc-em-${idx}-${key}"
                 class="emotion-check-label"
-                style="font-size:10px;padding:2px 8px;">${label}</label>`
+                style="font-size:10px;padding:2px 8px;">${t(`emo_${key}`)}</label>`
         ).join('');
 
         card.innerHTML = `
             <button class="bulk-remove-btn" onclick="this.closest('.bulk-card').remove(); updateBulkSaveBtn()">×</button>
-            <div class="bulk-card-num">Tanıklık ${idx}</div>
+            <div class="bulk-card-num">${t('bulkCardNum')(idx)}</div>
 
             <span class="modal-field-label" style="margin-top:0" data-i18n="titleLabel">Başlık *</span>
             <input type="text" class="modal-input bc-title" placeholder="">
@@ -2319,8 +2621,16 @@
         document.getElementById('bulk-person').value = '';
         updateBulkSaveBtn();
 
-        if (!allValid) alert('Some cards had errors and were skipped. Valid stories were saved.');
+        if (!allValid) alert(t('bulkSaveError'));
     }
+
+    // Delegated handler for popup "Watch" buttons — avoids inline onclick string
+    // interpolation (titles with apostrophes/quotes used to break it or inject).
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('.play-video-btn');
+        if (!btn) return;
+        openVideoPanel(btn.dataset.videoUrl, btn.dataset.videoTitle);
+    });
 
     // Ctrl+Shift+A → admin login (hidden from public view)
     document.addEventListener('keydown', e => {
@@ -2333,6 +2643,43 @@
 
     // Apply saved language on load
     applyLang(currentLang);
+
+    // ── Entrance intro (shown once per device) ──────────────
+    (function initIntro() {
+        const overlay = document.getElementById('intro-overlay');
+        if (!overlay) return;
+        if (localStorage.getItem('uskudar-intro-seen')) return; // already seen — skip
+
+        overlay.classList.add('visible');
+        overlay.setAttribute('aria-hidden', 'false');
+
+        let dismissed = false;
+        function dismissIntro() {
+            if (dismissed) return;
+            dismissed = true;
+            localStorage.setItem('uskudar-intro-seen', '1');
+
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const remove = (e) => {
+                if (e && e.propertyName && e.propertyName !== 'opacity') return; // ignore non-opacity transitions
+                overlay.classList.remove('visible', 'dismissing');
+                overlay.setAttribute('aria-hidden', 'true');
+                overlay.removeEventListener('transitionend', remove);
+            };
+            if (reduce) {
+                remove();
+            } else {
+                overlay.classList.add('dismissing');   // opacity → 0 via transition
+                overlay.addEventListener('transitionend', remove);
+                setTimeout(remove, 1000);              // fallback if transitionend doesn't fire
+            }
+        }
+
+        overlay.addEventListener('click', dismissIntro);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && overlay.classList.contains('visible')) dismissIntro();
+        });
+    })();
 </script>
 
 </body>
