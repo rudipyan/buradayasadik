@@ -710,7 +710,7 @@
             background: rgba(245,245,245,0.55);
             backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
-            cursor: pointer;
+            cursor: default;
             transition: opacity 0.8s ease;
         }
         #intro-overlay.visible { display: flex; }
@@ -754,9 +754,30 @@
             color: #fff;
         }
         .intro-lang-btn:active { transform: scale(0.97); }
+        .intro-lang-btn.active {
+            background: #1a1a1a;
+            border-color: #1a1a1a;
+            color: #fff;
+        }
+        #intro-enter {
+            margin-top: 22px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            background: #1a1a1a;
+            border: none;
+            border-radius: 22px;
+            padding: 11px 28px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+        }
+        #intro-enter:hover { background: #333; }
+        #intro-enter:active { transform: scale(0.97); }
         @media (prefers-reduced-motion: reduce) {
             #intro-overlay { transition: none; }
             .intro-lang-btn { transition: none; }
+            #intro-enter { transition: none; }
         }
     </style>
 </head>
@@ -780,6 +801,7 @@
             <button type="button" class="intro-lang-btn" data-lang="en">English</button>
             <button type="button" class="intro-lang-btn" data-lang="hy">Հայերէն</button>
         </div>
+        <button type="button" id="intro-enter" data-i18n="introEnter">Haritaya gir →</button>
     </div>
 </div>
 
@@ -1303,6 +1325,7 @@
             introHeading:      'Burada Yaşadık',
             introBody:         'Burada Yaşadık, İstanbul\'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.',
             markerKey:         '● Mevcut mekân · ◌ Artık mevcut değil · ∿ Konum belirsiz',
+            introEnter:        'Haritaya gir →',
             pageTitle:         'Üsküdar Tanıklık Haritası',
             videoPanelTitle:   'Sözlü tarih görüşmesi (kayıt)',
             subtitle:          'Üsküdar Sözlü Tarih Projesi',
@@ -1369,6 +1392,7 @@
             introHeading:      'We Lived Here',
             introBody:         'We Lived Here is an oral history research project on the memory, spatial history, and urban erasure of the Armenian community in Istanbul\'s Üsküdar district. The map documents the personal narratives and spatial experiences of local residents. Click on the markers to examine the testimonies, and use the filters to search by person and emotion.',
             markerKey:         '● Active place · ◌ No longer exists · ∿ Location uncertain',
+            introEnter:        'Enter the map →',
             pageTitle:         'Üsküdar Testimony Map',
             videoPanelTitle:   'Oral history interview (recording)',
             subtitle:          'Üsküdar Oral History Project',
@@ -1435,6 +1459,7 @@
             introHeading:      'Հոս ապրեցանք',
             introBody:         '«Հոս ապրեցանք»ը բանաւոր պատմութեան հետազօտական ծրագիր մըն է, որ կ՚ուսումնասիրէ Սթամպուլի Իւսկիւտար թաղամասի հայ համայնքի յիշողութիւնը, տարածական անցեալը եւ քաղաքային քանդումներու հետեւանքով կորսուած տարածքները։ Քարտէսը կը վաւերագրէ թաղեցիներու անձնական պատումները եւ տարածական փորձառութիւնները։ Կրնաք սեղմել նշաններուն վրայ՝ վկայութիւնները ուսումնասիրելու համար, եւ գործածել զտիչները՝ ըստ անձի ու զգացումի որոնում կատարելու համար։',
             markerKey:         '● Գոյութիւն ունեցող վայր · ◌ Այլեւս չկայ · ∿ Անորոշ դիրք',
+            introEnter:        'Մուտք →',
             pageTitle:         'Իւսկիւտարի Վկայութեանց Քարտէս',
             videoPanelTitle:   'Բանաւոր պատմութեան հարցազրոյց (ձայնագրութիւն)',
             subtitle:          'Իւսկիւտարի Բանաւոր Պատմութեան Ծրագիր',
@@ -2693,18 +2718,28 @@
             }
         }
 
-        overlay.addEventListener('click', dismissIntro);
+        // Backdrop click (outside the text) or Esc enters the map.
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) dismissIntro();
+        });
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape' && overlay.classList.contains('visible')) dismissIntro();
         });
 
-        // Language buttons: set the site language, then enter the map.
-        overlay.querySelectorAll('.intro-lang-btn').forEach(btn => {
+        // Language buttons switch the site language and stay open so it stays readable.
+        const langButtons = overlay.querySelectorAll('.intro-lang-btn');
+        const markActiveLang = lang =>
+            langButtons.forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+        markActiveLang(currentLang);
+        langButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 applyLang(btn.dataset.lang);
-                dismissIntro();
+                markActiveLang(btn.dataset.lang);
             });
         });
+
+        // The Enter button is what actually dismisses into the map.
+        document.getElementById('intro-enter').addEventListener('click', dismissIntro);
     })();
 </script>
 
