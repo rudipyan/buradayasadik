@@ -15,13 +15,26 @@
             box-sizing: border-box;
         }
 
+        /* Western Armenian is set in a typeface designed for Armenian (self-hosted,
+           works offline like the vendored mapbox-gl). unicode-range scopes it to
+           Armenian glyphs only, so Latin text keeps the existing type — the two
+           scripts coexist rather than Armenian falling back to a system afterthought. */
+        @font-face {
+            font-family: 'Noto Serif Armenian';
+            font-style: normal;
+            font-weight: 400 700;
+            font-display: swap;
+            src: url('fonts/NotoSerifArmenian-wght400-700.woff2') format('woff2');
+            unicode-range: U+0308, U+0530-058F, U+2010, U+2024, U+25CC, U+FB13-FB17;
+        }
+
         html, body {
             width: 100%;
             height: 100%;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Noto Serif Armenian', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #f5f5f5;
             color: #333;
         }
@@ -345,7 +358,7 @@
 
         /* ── Mapbox popup ────────────────────────────── */
         .mapboxgl-popup-content {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Noto Serif Armenian', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             padding: 14px 16px !important;
             border-radius: 10px !important;
             max-width: 400px;
@@ -710,7 +723,7 @@
         #intro-overlay.dismissing { opacity: 0; }
         #intro-inner { max-width: 560px; }
         #intro-heading {
-            font-family: Georgia, 'Times New Roman', serif;
+            font-family: 'Noto Serif Armenian', Georgia, 'Times New Roman', serif;
             font-size: 40px;
             font-weight: 600;
             color: #1a1a1a;
@@ -1260,13 +1273,18 @@
     ];
     
     // Emotion colors
+    // INTERIM palette — placeholder until the co-design workshop palette (in
+    // Western Armenian) replaces it. All six hues sit at equal OKLCH lightness
+    // and chroma (L=0.62, C=0.14) so no emotion visually outweighs another:
+    // the old ad-hoc colors let near-black "fear" dominate every cluster and
+    // saturated orange glow — an editorial weighting nobody decided.
     const emotionData = {
-        blue: { hex: '#4A90E2', label: 'Üzüntü' },
-        purple: { hex: '#9B59B6', label: 'Nostalji' },
-        orange: { hex: '#FF9800', label: 'Mutluluk' },
-        green: { hex: '#27AE60', label: 'Aidiyet' },
-        red: { hex: '#E74C3C', label: 'Öfke' },
-        black: { hex: '#2C2C2C', label: 'Korku' }
+        blue: { hex: '#288DD4', label: 'Üzüntü' },    // oklch(0.62 0.14 245)
+        purple: { hex: '#B464AE', label: 'Nostalji' },// oklch(0.62 0.14 330)
+        orange: { hex: '#BE7100', label: 'Mutluluk' },// oklch(0.62 0.14 65)
+        green: { hex: '#399D57', label: 'Aidiyet' },  // oklch(0.62 0.14 150)
+        red: { hex: '#CD6057', label: 'Öfke' },       // oklch(0.62 0.14 27)
+        black: { hex: '#8675D4', label: 'Korku' }     // oklch(0.62 0.14 290)
     };
     
     // People names
@@ -1853,6 +1871,10 @@
         // physicalSize: actual canvas pixel dimensions; CSS display size stays fixed at BASE_SIZE.
         // This keeps pixel density 1:1 at all zoom levels, preventing blur.
         const BASE_SIZE = 44;
+        // Reduced motion: ghosts stay visible and static (ghost-ness reads via
+        // desaturation alone), drift is disabled. Input-driven motion (cursor
+        // repulsion, catch) is kept — it follows the user's own gesture.
+        const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         function desaturate(hex, factor) {
             const r = parseInt(hex.slice(1,3), 16);
             const g = parseInt(hex.slice(3,5), 16);
@@ -1946,7 +1968,10 @@
                     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
                     if (ghost && !caught) {
                         // Uncaught ghost: desaturated, pulsing alpha
-                        const alpha = 0.08 + 0.37 * (0.5 + 0.5 * Math.sin(now * 0.0025 + p.phase));
+                        // (static mid-pulse alpha under reduced motion)
+                        const alpha = REDUCED_MOTION
+                            ? 0.30
+                            : 0.08 + 0.37 * (0.5 + 0.5 * Math.sin(now * 0.0025 + p.phase));
                         const [r, g, b] = p.ghostRgb;
                         ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
                     } else if (ghost && caught) {
@@ -1971,31 +1996,45 @@
                     ctx.fill();
                 }
 
-                // Ghost markers always animate; caught ghosts also keep animating
-                rafId = (ghost || hovering || anyMoving) ? requestAnimationFrame(tick) : null;
+                // Ghost markers always animate (their alpha is static under reduced
+                // motion, so no idle loop is needed); caught ghosts keep animating
+                rafId = ((ghost && !REDUCED_MOTION) || hovering || anyMoving) ? requestAnimationFrame(tick) : null;
             }
 
             function startAnim() { if (!rafId) rafId = requestAnimationFrame(tick); }
 
-            canvas.addEventListener('mouseenter', (e) => {
+            function setPointer(clientX, clientY) {
+                const rect = canvas.getBoundingClientRect();
+                mouseX = clientX - rect.left;
+                mouseY = clientY - rect.top;
+            }
+            function pointerIn(clientX, clientY) {
                 hovering = true;
                 canvas._hovering = true;
-                const rect = canvas.getBoundingClientRect();
-                mouseX = e.clientX - rect.left;
-                mouseY = e.clientY - rect.top;
+                setPointer(clientX, clientY);
                 startAnim();
-            });
-            canvas.addEventListener('mousemove', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                mouseX = e.clientX - rect.left;
-                mouseY = e.clientY - rect.top;
-            });
-            canvas.addEventListener('mouseleave', () => {
+            }
+            function pointerOut() {
                 hovering = false;
                 canvas._hovering = false;
                 mouseX = -999; mouseY = -999;
                 startAnim();
-            });
+            }
+            canvas.addEventListener('mouseenter', (e) => pointerIn(e.clientX, e.clientY));
+            canvas.addEventListener('mousemove', (e) => setPointer(e.clientX, e.clientY));
+            canvas.addEventListener('mouseleave', pointerOut);
+            // Touch: a held finger is the touch equivalent of the hover — the
+            // cluster reacts (repulsion) while touched and settles on release.
+            canvas.addEventListener('touchstart', (e) => {
+                const t = e.touches[0];
+                if (t) pointerIn(t.clientX, t.clientY);
+            }, { passive: true });
+            canvas.addEventListener('touchmove', (e) => {
+                const t = e.touches[0];
+                if (t) setPointer(t.clientX, t.clientY);
+            }, { passive: true });
+            canvas.addEventListener('touchend', pointerOut, { passive: true });
+            canvas.addEventListener('touchcancel', pointerOut, { passive: true });
 
             // Initial static render
             tick();
@@ -2013,15 +2052,6 @@
                 const bias = parseFloat(sessionStorage.getItem('ghostBias'));
                 const markerPhase = Math.random();
 
-                // Start invisible; snap without transition on zoom-rebuild if already visible
-                canvas.style.transition = 'none';
-                canvas.style.opacity    = ghostAlreadyVisible ? '1' : '0';
-                canvas._ghostVisible    = !!ghostAlreadyVisible;
-                // Re-enable transition after the initial paint so future fades work
-                requestAnimationFrame(() => {
-                    canvas.style.transition = 'opacity 1.8s ease';
-                });
-
                 function scheduleGhost() {
                     if (caught) return;
                     // Visible: 6–20 s (high bias → longer)
@@ -2038,18 +2068,36 @@
                     }, visibleMs);
                 }
 
-                if (ghostAlreadyVisible) {
-                    // Zoom rebuild: already visible, just schedule the next hide
-                    scheduleGhost();
+                if (REDUCED_MOTION) {
+                    // Reduced motion: no haunting cycle — the ghost stays visible,
+                    // static and faint. Ghost-ness reads via desaturation alone.
+                    canvas.style.opacity = '1';
+                    canvas._ghostVisible = true;
                 } else {
-                    // First appearance: 1–6 s staggered so markers don't all pop at once
-                    const initialDelay = 1000 + markerPhase * 5000;
-                    ghostTimerId = setTimeout(scheduleGhost, initialDelay);
+                    // Start invisible; snap without transition on zoom-rebuild if already visible
+                    canvas.style.transition = 'none';
+                    canvas.style.opacity    = ghostAlreadyVisible ? '1' : '0';
+                    canvas._ghostVisible    = !!ghostAlreadyVisible;
+                    // Re-enable transition after the initial paint so future fades work
+                    requestAnimationFrame(() => {
+                        canvas.style.transition = 'opacity 1.8s ease';
+                    });
+
+                    if (ghostAlreadyVisible) {
+                        // Zoom rebuild: already visible, just schedule the next hide
+                        scheduleGhost();
+                    } else {
+                        // First appearance: 1–6 s staggered so markers don't all pop at once
+                        const initialDelay = 1000 + markerPhase * 5000;
+                        ghostTimerId = setTimeout(scheduleGhost, initialDelay);
+                    }
                 }
 
                 // ── Catch / release ───────────────────────────────────────────
-                canvas.addEventListener('mouseenter', () => {
-                    if (!ghost) return;
+                // Kept under reduced motion too: materializing follows the
+                // user's own gesture. On touch, a held finger is the catch and
+                // lifting it is the release.
+                function catchGhost() {
                     caught = true;
                     materializeT = performance.now();
                     if (ghostTimerId) { clearTimeout(ghostTimerId); ghostTimerId = null; }
@@ -2057,15 +2105,19 @@
                     canvas.style.opacity = '1';
                     canvas._ghostVisible = true;
                     startAnim();
-                });
-
-                canvas.addEventListener('mouseleave', () => {
-                    if (!ghost) return;
+                }
+                function releaseGhost() {
                     caught = false;
+                    if (REDUCED_MOTION) { startAnim(); return; } // stays visible; repaint faint state
                     // Brief grace period before the ghost resumes its haunting cycle
                     canvas.style.transition = 'opacity 1.8s ease';
                     ghostTimerId = setTimeout(scheduleGhost, 1200 + Math.random() * 2000);
-                });
+                }
+                canvas.addEventListener('mouseenter', catchGhost);
+                canvas.addEventListener('mouseleave', releaseGhost);
+                canvas.addEventListener('touchstart', catchGhost, { passive: true });
+                canvas.addEventListener('touchend', releaseGhost, { passive: true });
+                canvas.addEventListener('touchcancel', releaseGhost, { passive: true });
             }
             // ─────────────────────────────────────────────────────────────────
 
@@ -2146,8 +2198,10 @@
             markerElements[story.id] = inner; // scale applied to inner, not el
             markerObjects[story.id] = marker;
 
-            // Drift animation for markers with unknown location
-            if (story.locationKnown === false) {
+            // Drift animation for markers with unknown location.
+            // Skipped under reduced motion — uncertainty still reads through the
+            // looser particle cluster (see clusterR in buildParticleMarker).
+            if (story.locationKnown === false && !REDUCED_MOTION) {
                 const baseLat = story.lat;
                 const baseLng = story.lng;
                 const t0 = Math.random() * 1000;
