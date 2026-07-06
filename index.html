@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Üsküdar Tanıklık Haritası</title>
     
-    <!-- Mapbox CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.css" rel="stylesheet">
+    <!-- Mapbox CSS (vendored v2.15.0 — works offline) -->
+    <link href="mapbox-gl.css" rel="stylesheet">
     
     <style>
         * {
@@ -343,27 +343,6 @@
             display: none;
         }
 
-        /* ── Counter badge ───────────────────────────── */
-        .counter {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: white;
-            padding: 10px 14px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
-            font-size: 11px;
-            color: #888;
-            z-index: 100;
-            text-align: center;
-        }
-        .counter strong {
-            color: #1a1a1a;
-            font-size: 20px;
-            display: block;
-            line-height: 1.2;
-        }
-
         /* ── Mapbox popup ────────────────────────────── */
         .mapboxgl-popup-content {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -594,7 +573,9 @@
         }
         .play-video-btn:hover { background: #444; }
 
-        /* ── Language switcher ─────────────────────── */
+        /* ── Language switcher ───────────────────────
+           All three languages stay visible at all times — the co-presence of
+           the three scripts (incl. Western Armenian) is part of the content. */
         #lang-switcher {
             position: absolute;
             top: 10px;
@@ -608,14 +589,6 @@
             padding: 4px 8px;
             gap: 0;
             box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-            overflow: hidden;
-            max-width: 32px;
-            transition: max-width 0.25s ease;
-            cursor: pointer;
-        }
-        #lang-switcher:hover,
-        #lang-switcher:focus-within {
-            max-width: 120px;
         }
         .lang-option {
             font-size: 11px;
@@ -628,14 +601,8 @@
             border: none;
             background: none;
             transition: color 0.15s, background 0.15s;
-            display: none;
-        }
-        #lang-switcher:hover .lang-option,
-        #lang-switcher:focus-within .lang-option {
-            display: inline-block;
         }
         .lang-option.active {
-            display: inline-block;
             color: #1a1a1a;
             background: #f0f0f0;
         }
@@ -688,13 +655,39 @@
         .modal-input { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; margin-bottom: 4px; font-family: inherit; box-sizing: border-box; }
         .modal-textarea { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; height: 80px; resize: vertical; font-family: inherit; box-sizing: border-box; margin-bottom: 4px; }
 
-        /* ── Marker-state key ───────────────────── */
+        /* ── Marker-state key — live mini markers ── */
         .marker-key {
             margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .marker-key-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 11px;
             color: #aaa;
-            text-align: center;
             letter-spacing: 0.2px;
+        }
+        .marker-key-canvas {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Uncertain-location key wobbles gently, echoing the drifting map markers */
+        .marker-key-canvas.key-drift canvas {
+            animation: key-drift 6s ease-in-out infinite alternate;
+        }
+        @keyframes key-drift {
+            from { transform: translate(-2px, 1px); }
+            to   { transform: translate(2px, -1px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .marker-key-canvas.key-drift canvas { animation: none; }
         }
 
         /* ── Entrance intro overlay ─────────────── */
@@ -866,15 +859,22 @@
             <div class="stats-detail" id="activeFilters"></div>
         </div>
 
-        <!-- Marker-state key (glyphs functional, labels placeholder) -->
-        <div class="marker-key" data-i18n="markerKey">● Mevcut mekân · ◌ Artık mevcut değil · ∿ Konum belirsiz</div>
+        <!-- Marker-state key — live mini particle markers, filled in on map load -->
+        <div class="marker-key">
+            <div class="marker-key-item">
+                <span class="marker-key-canvas" id="key-present"></span>
+                <span data-i18n="legendActive">Mevcut mekân</span>
+            </div>
+            <div class="marker-key-item">
+                <span class="marker-key-canvas" id="key-ghost"></span>
+                <span data-i18n="legendGhost">Artık mevcut değil</span>
+            </div>
+            <div class="marker-key-item">
+                <span class="marker-key-canvas key-drift" id="key-uncertain"></span>
+                <span data-i18n="legendUncertain">Konum belirsiz</span>
+            </div>
+        </div>
     </div>
-</div>
-
-<!-- Right counter -->
-<div class="counter">
-    <strong id="markerCount">0</strong>
-    <div style="font-size: 10px; color: #bbb; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px;" data-i18n="counterLabel">Anı</div>
 </div>
 
 <!-- Admin login modal -->
@@ -994,8 +994,8 @@
     </div>
 </div>
 
-<!-- Mapbox GL JS Library -->
-<script src="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.js"></script>
+<!-- Mapbox GL JS Library (vendored v2.15.0 — works offline) -->
+<script src="mapbox-gl.js"></script>
 
 <script>
     // ========================================
@@ -1316,6 +1316,8 @@
             errorRequired:     'Zorunlu alanları doldurun ve en az bir duygu seçin.',
             legendActive:      'Mevcut mekân',
             legendGhost:       'Artık mevcut değil',
+            legendUncertain:   'Konum belirsiz',
+            narratorLabel:     n => `Anlatıcı ${n}`,
             watchBtn:          '▶ Tanıklığı İzle',
             popupPeriod:       'Dönem',
             adminLoginTitle:   'Yönetici Girişi',
@@ -1325,14 +1327,12 @@
             adminLoginBtn:     'Giriş',
             introHeading:      'Burada Yaşadık',
             introBody:         'Burada Yaşadık, İstanbul\'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.',
-            markerKey:         '● Mevcut mekân · ◌ Artık mevcut değil · ∿ Konum belirsiz',
             introEnter:        'Haritaya gir →',
             pageTitle:         'Üsküdar Tanıklık Haritası',
             videoPanelTitle:   'Sözlü tarih görüşmesi (kayıt)',
             subtitle:          'Üsküdar Sözlü Tarih Projesi',
             close:             'Kapat',
             statsLabel:        'Görünen Anı',
-            counterLabel:      'Anı',
             locationLabel:     'Konum *',
             bulkCardNum:       n => `Tanıklık ${n}`,
             deleteConfirm:     'Bu tanıklığı silmek istediğinize emin misiniz?',
@@ -1383,6 +1383,8 @@
             errorRequired:     'Fill in required fields and select at least one emotion.',
             legendActive:      'Active place',
             legendGhost:       'No longer exists',
+            legendUncertain:   'Location uncertain',
+            narratorLabel:     n => `Narrator ${n}`,
             watchBtn:          '▶ Watch testimony',
             popupPeriod:       'Period',
             adminLoginTitle:   'Admin Login',
@@ -1392,14 +1394,12 @@
             adminLoginBtn:     'Login',
             introHeading:      'We Lived Here',
             introBody:         'We Lived Here is an oral history research project on the memory, spatial history, and urban erasure of the Armenian community in Istanbul\'s Üsküdar district. The map documents the personal narratives and spatial experiences of local residents. Click on the markers to examine the testimonies, and use the filters to search by person and emotion.',
-            markerKey:         '● Active place · ◌ No longer exists · ∿ Location uncertain',
             introEnter:        'Enter the map →',
             pageTitle:         'Üsküdar Testimony Map',
             videoPanelTitle:   'Oral history interview (recording)',
             subtitle:          'Üsküdar Oral History Project',
             close:             'Close',
             statsLabel:        'Visible stories',
-            counterLabel:      'Stories',
             locationLabel:     'Location *',
             bulkCardNum:       n => `Story ${n}`,
             deleteConfirm:     'Are you sure you want to delete this testimony?',
@@ -1450,6 +1450,8 @@
             errorRequired:     'Լրացուցէ՛ք պարտադիր դաշտերը եւ ընտրեցէ՛ք առնուազն մէկ զգացում։',
             legendActive:      'Գոյութիւն ունեցող վայր',
             legendGhost:       'Այլեւս չկայ',
+            legendUncertain:   'Անորոշ դիրք',
+            narratorLabel:     n => `Պատմող ${n}`,
             watchBtn:          '▶ Դիտել վկայութիւնը',
             popupPeriod:       'Ժամանակաշրջան',
             adminLoginTitle:   'Կառավարչի մուտք',
@@ -1459,14 +1461,12 @@
             adminLoginBtn:     'Մուտք գործել',
             introHeading:      'Հոս ապրեցանք',
             introBody:         '«Հոս ապրեցանք»ը բանաւոր պատմութեան հետազօտական ծրագիր մըն է, որ կ՚ուսումնասիրէ Սթամպուլի Սկիւտար թաղամասի հայ համայնքի յիշողութիւնը, տարածական անցեալը եւ քաղաքային քանդումներու հետեւանքով կորսուած տարածքները։ Քարտէսը կը վաւերագրէ թաղեցիներու անձնական պատումները եւ տարածական փորձառութիւնները։ Կրնաք սեղմել նշաններուն վրայ՝ վկայութիւնները ուսումնասիրելու համար, եւ գործածել զտիչները՝ ըստ անձերու եւ զգացումներու որոնելու համար։',
-            markerKey:         '● Գոյութիւն ունեցող վայր · ◌ Այլեւս չկայ · ∿ Անորոշ վայր',
             introEnter:        'Մտնել քարտէս →',
             pageTitle:         'Սկիւտարի Վկայութեանց Քարտէս',
             videoPanelTitle:   'Բանաւոր պատմութեան հարցազրոյց (տեսագրութիւն)',
             subtitle:          'Սկիւտարի Բանաւոր Պատմութեան Ծրագիր',
             close:             'Գոցել',
             statsLabel:        'Երեւցող վկայութիւններ',
-            counterLabel:      'Վկայութիւններ',
             locationLabel:     'Վայր *',
             bulkCardNum:       n => `Վկայութիւն ${n}`,
             deleteConfirm:     'Վստա՞հ էք, թէ կը փափաքիք ջնջել այս վկայութիւնը։',
@@ -1492,6 +1492,13 @@
 
     function t(key) {
         return (i18n[currentLang]?.[key] ?? i18n.tr[key]) ?? key;
+    }
+
+    // Purely numeric person ids are anonymized narrators — render them as a
+    // deliberate label ("Anlatıcı 1") rather than a bare numeral. Stored data
+    // keeps the raw id; this is display-only.
+    function displayPersonName(person) {
+        return /^\d+$/.test(person) ? t('narratorLabel')(person) : person;
     }
 
     function applyLang(lang) {
@@ -1642,7 +1649,7 @@
             people.forEach(personName => {
                 const btn = document.createElement('button');
                 btn.className = 'chip active';
-                btn.innerHTML = personName;
+                btn.textContent = displayPersonName(personName);
                 btn.dataset.person = personName;
                 btn.onclick = () => togglePerson(personName, btn);
                 grid.appendChild(btn);
@@ -1788,6 +1795,7 @@
             return (
                 title.toLowerCase().includes(searchQuery) ||
                 story.person.toLowerCase().includes(searchQuery) ||
+                displayPersonName(story.person).toLowerCase().includes(searchQuery) ||
                 narrative.toLowerCase().includes(searchQuery)
             );
         }
@@ -1811,7 +1819,6 @@
                 }
                 if (isVisible) visibleCount++;
             });
-            document.getElementById('markerCount').textContent = visibleCount;
             document.getElementById('storyCount').textContent = visibleCount;
         }
 
@@ -1857,7 +1864,9 @@
                 Math.round(b + (grey - b) * factor),
             ];
         }
-        function buildParticleMarker(emotions, physicalSize, drifting, ghost, ghostAlreadyVisible) {
+        // pinVisible: legend mode — a ghost keeps its desaturated pulse but stays
+        // permanently visible and skips the haunting scheduler and catch mechanic.
+        function buildParticleMarker(emotions, physicalSize, drifting, ghost, ghostAlreadyVisible, pinVisible) {
             const SIZE = physicalSize || BASE_SIZE;
             const scale = SIZE / BASE_SIZE;
             const cx = SIZE / 2, cy = SIZE / 2;
@@ -1993,7 +2002,11 @@
 
             // ── Ghost haunting scheduler ──────────────────────────────────────
             let ghostTimerId = null;
-            if (ghost) {
+            if (ghost && pinVisible) {
+                // Legend ghost: always visible, pulse only
+                canvas.style.opacity = '1';
+                canvas._ghostVisible = true;
+            } else if (ghost) {
                 if (!sessionStorage.getItem('ghostBias')) {
                     sessionStorage.setItem('ghostBias', Math.random().toFixed(4));
                 }
@@ -2087,14 +2100,14 @@
 
             return `
                 <h3>${escapeHtml(title)}</h3>
-                <div class="person-name"><strong>${escapeHtml(story.person)}</strong></div>
+                <div class="person-name"><strong>${escapeHtml(displayPersonName(story.person))}</strong></div>
                 <div style="margin-bottom:0.75rem;">${emotionTags}</div>
                 ${periodHTML}
                 <p>${escapeHtml(narrative)}</p>
                 ${story.videoUrl ? `<div style="text-align:center; margin-top: 0.75rem;">
                     <button class="play-video-btn"
                         data-video-url="${escapeHtml(story.videoUrl)}"
-                        data-video-title="${escapeHtml(title + ' — ' + story.person)}">
+                        data-video-title="${escapeHtml(title + ' — ' + displayPersonName(story.person))}">
                         ${t('watchBtn')}
                     </button>
                 </div>` : ''}
@@ -2124,19 +2137,12 @@
                 closeButton: true
             }).setHTML(getPopupHTML(story));
             
-            // Create marker (draggable for coordinate adjustment)
-            const marker = new mapboxgl.Marker({ element: el, draggable: true })
+            const marker = new mapboxgl.Marker({ element: el })
                 .setLngLat([story.lng, story.lat])
                 .setPopup(popup)
                 .addTo(map);
 
-            marker.on('dragend', () => {
-                const lngLat = marker.getLngLat();
-                story.lat = lngLat.lat;
-                story.lng = lngLat.lng;
-                updateCoordinates(story);
-            });
-            
+
             markerElements[story.id] = inner; // scale applied to inner, not el
             markerObjects[story.id] = marker;
 
@@ -2174,30 +2180,7 @@
         }
 
         stories.forEach(addMarkerForStory);
-        
-        function updateCoordinates(story) {
-            const msg = `${story.person} — ${story.title}\nLat: ${story.lat.toFixed(8)}\nLng: ${story.lng.toFixed(8)}`;
-            console.log(msg);
 
-            let toast = document.getElementById('coord-toast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'coord-toast';
-                Object.assign(toast.style, {
-                    position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
-                    background: 'rgba(0,0,0,0.82)', color: '#fff', padding: '10px 18px',
-                    borderRadius: '8px', fontFamily: 'monospace', fontSize: '13px',
-                    whiteSpace: 'pre', zIndex: 9999, pointerEvents: 'none',
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.4)'
-                });
-                document.body.appendChild(toast);
-            }
-            toast.textContent = msg;
-            toast.style.opacity = '1';
-            clearTimeout(toast._timer);
-            toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 4000);
-        }
-        
         // Rebuild marker canvases at zoom-appropriate physical size — no CSS scaling,
         // so pixel density stays 1:1 and markers never blur.
         const SCALE_THRESHOLD = 16;  // zoom level below which markers stay at BASE_SIZE
@@ -2234,9 +2217,28 @@
         }
         map.on('zoom', updateMarkerScales);
 
+        // Marker-state key: live mini markers that behave like the real ones —
+        // the legend teaches by demonstrating, not by symbol.
+        function buildMarkerKey() {
+            const KEY_SIZE = 24;
+            [
+                { id: 'key-present',   emotions: ['green', 'orange'], drifting: false, ghost: false },
+                { id: 'key-ghost',     emotions: ['purple', 'blue'],  drifting: false, ghost: true  },
+                { id: 'key-uncertain', emotions: ['black', 'purple'], drifting: true,  ghost: false },
+            ].forEach(({ id, emotions, drifting, ghost }) => {
+                const slot = document.getElementById(id);
+                if (!slot) return;
+                const old = slot.querySelector('canvas');
+                if (old?.destroyAnim) old.destroyAnim();
+                slot.innerHTML = '';
+                slot.appendChild(buildParticleMarker(emotions, KEY_SIZE, drifting, ghost, true, true));
+            });
+        }
+
         // Initialize filters
         buildPeopleFilter();
         buildEmotionFilter();
+        buildMarkerKey();
         updateMarkerVisibility();
         updateStats();
 
@@ -2304,13 +2306,15 @@
             delete markerObjects[id];
             delete markerElements[id];
         });
-        // Re-add all markers from seeded data
-        stories.forEach(s => addMarkerForStory(s));
+        // Re-add all markers from seeded data.
+        // addMarkerForStory & co. live inside the map 'load' closure — they are
+        // only reachable through window._mapApi from this top-level scope.
         if (window._mapApi) {
+            stories.forEach(s => window._mapApi.addMarkerForStory(s));
             window._mapApi.buildPeopleFilter();
             window._mapApi.buildEmotionFilter();
+            window._mapApi.updateMarkerVisibility();
         }
-        if (window._mapApi) window._mapApi.updateMarkerVisibility();
     }
 
     const ADMIN_CREDS = {
@@ -2369,6 +2373,18 @@
 
     // ── Story Management ──────────────────────
     let editingStoryId = null;
+    let editingLang = null; // language shown in the edit form when it was opened
+
+    // The edit form shows a single language of a possibly-trilingual field.
+    // On save, write the edited text back into that language slot only —
+    // overwriting the whole object would destroy the other translations.
+    function mergeLangField(original, edited, lang) {
+        if (typeof original !== 'object' || original === null) return edited;
+        // The form displayed original[lang], falling back to tr — write back to
+        // the slot that was actually shown.
+        const key = original[lang] !== undefined ? lang : 'tr';
+        return { ...original, [key]: edited };
+    }
 
     function openStoryManagement() {
         populatePersonFilter();
@@ -2398,7 +2414,7 @@
         const sel = document.getElementById('mgmt-person-filter');
         const unique = [...new Set(stories.map(s => s.person))].sort();
         sel.innerHTML = `<option value="">${t('filterAll')}</option>` +
-            unique.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+            unique.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(displayPersonName(p))}</option>`).join('');
     }
 
     function renderStoryList() {
@@ -2421,7 +2437,7 @@
                 <div class="mgmt-story-row">
                     <div class="mgmt-story-info">
                         <strong>${escapeHtml(getStoryTitle(s))}${s.isGhost ? ' 👻' : ''}</strong>
-                        <span>· ${escapeHtml(s.person)}</span>
+                        <span>· ${escapeHtml(displayPersonName(s.person))}</span>
                     </div>
                     <div class="mgmt-story-actions">
                         <button class="mgmt-btn-edit" onclick="openEditView(${s.id})">${t('editBtn')}</button>
@@ -2443,6 +2459,7 @@
         const story = stories.find(s => s.id === id);
         if (!story) return;
         editingStoryId = id;
+        editingLang = currentLang;
 
         const title = typeof story.title === 'object' ? (story.title[currentLang] ?? story.title.tr) : story.title;
         const narrative = typeof story.narrative === 'object' ? (story.narrative[currentLang] ?? story.narrative.tr) : story.narrative;
@@ -2504,7 +2521,13 @@
         const idx = stories.findIndex(s => s.id === editingStoryId);
         if (idx === -1) return;
 
-        stories[idx] = { ...stories[idx], person, title, narrative, period, lat, lng, isGhost, emotions, videoUrl };
+        stories[idx] = {
+            ...stories[idx],
+            person,
+            title:     mergeLangField(stories[idx].title, title, editingLang),
+            narrative: mergeLangField(stories[idx].narrative, narrative, editingLang),
+            period, lat, lng, isGhost, emotions, videoUrl,
+        };
         saveStories();
 
         // Rebuild the map marker
@@ -2514,14 +2537,14 @@
             delete markerObjects[editingStoryId];
             delete markerElements[editingStoryId];
         }
-        addMarkerForStory(stories[idx]);
+        if (window._mapApi) window._mapApi.addMarkerForStory(stories[idx]);
 
         // Update people list if new person name
         if (!people.includes(person)) people.push(person);
         if (window._mapApi) {
             window._mapApi.buildPeopleFilter();
+            window._mapApi.updateMarkerVisibility();
         }
-        updateMarkerVisibility();
         showListView();
         renderStoryList();
     }
@@ -2547,7 +2570,10 @@
             delete markerElements[id];
         }
         renderStoryList();
-        updateStats();
+        if (window._mapApi) {
+            window._mapApi.updateMarkerVisibility();
+            window._mapApi.updateStats();
+        }
     }
 
     // ── Bulk Add ─────────────────────────────
@@ -2650,15 +2676,15 @@
 
         toSave.forEach(s => {
             stories.push(s);
-            addMarkerForStory(s);
+            if (window._mapApi) window._mapApi.addMarkerForStory(s);
             if (!people.includes(s.person)) people.push(s.person);
         });
         saveStories();
         if (window._mapApi) {
             window._mapApi.buildPeopleFilter();
+            window._mapApi.updateMarkerVisibility();
+            window._mapApi.updateStats();
         }
-        updateMarkerVisibility();
-        updateStats();
 
         // Clear bulk pane
         document.getElementById('bulk-cards').innerHTML = '';
