@@ -1018,6 +1018,12 @@
     mapboxgl.accessToken = 'pk.eyJ1IjoicnVkaXB5YW4iLCJhIjoiY21yYWV1YXh1MGZrdDJ5czdhOTJlMTRrMCJ9.re9g226qY2CKjkixBKoqAQ';
     
     // Story data with people and emotions (emotions is an array — can have multiple)
+    // Bump SEED_VERSION whenever SEED_STORIES change, or returning browsers
+    // keep showing the stale copy cached in localStorage. On a version bump
+    // the hardcoded seed is treated as source of truth for seed stories
+    // (matched by id): stored copies are refreshed, admin edits/deletions of
+    // seed stories are undone, admin-added stories are kept.
+    const SEED_VERSION = 2;
     const SEED_STORIES = [
         // INTERVIEWEE 1'S STORIES
         {
@@ -1604,6 +1610,16 @@
             return;
         }
         if (!Array.isArray(parsed)) { loadSeed(); return; }
+
+        // Migrate stale storage after a SEED_VERSION bump (see SEED_VERSION).
+        if (localStorage.getItem('uskudar-seed-version') !== String(SEED_VERSION)) {
+            const freshSeed = SEED_STORIES.map(s =>
+                ({ ...s, period: s.period ?? '', isGhost: s.isGhost ?? false }));
+            const seedIds = new Set(freshSeed.map(s => s.id));
+            parsed = freshSeed.concat(parsed.filter(s => !seedIds.has(s.id)));
+            localStorage.setItem('uskudar-stories', JSON.stringify(parsed));
+            localStorage.setItem('uskudar-seed-version', String(SEED_VERSION));
+        }
 
         parsed.forEach(s => {
             // Backfill new fields on old objects
@@ -2349,6 +2365,7 @@
         }));
         localStorage.setItem('uskudar-stories', JSON.stringify(seeded));
         localStorage.setItem('uskudar-seeded', '1');
+        localStorage.setItem('uskudar-seed-version', String(SEED_VERSION));
 
         // Re-initialise in place — no hard reload needed
         stories.length = 0;
