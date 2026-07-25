@@ -658,16 +658,25 @@ body {
     align-items: center;
     justify-content: center;
 }
-/* Uncertain-location key wobbles gently, echoing the drifting map markers */
-.marker-key-canvas.key-drift canvas {
-    animation: key-drift 6s ease-in-out infinite alternate;
+/* One dot per state. The three rows share a hue and differ only in saturation
+   and motion, so the key reads as three states rather than three colours. */
+.key-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: block;
+    flex-shrink: 0;
+}
+/* Uncertain-location key wobbles, echoing the drifting map markers */
+.marker-key-canvas.key-drift .key-dot {
+    animation: key-drift 4.5s ease-in-out infinite alternate;
 }
 @keyframes key-drift {
-    from { transform: translate(-2px, 1px); }
-    to   { transform: translate(2px, -1px); }
+    from { transform: translate(-3px, 2px); }
+    to   { transform: translate(3px, -2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-    .marker-key-canvas.key-drift canvas { animation: none; }
+    .marker-key-canvas.key-drift .key-dot { animation: none; }
 }
 
 /* ── Entrance intro overlay ─────────────── */

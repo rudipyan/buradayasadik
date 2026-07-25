@@ -99,7 +99,7 @@
         <div class="marker-key">
             <div class="marker-key-item">
                 <span class="marker-key-canvas" id="key-present"></span>
-                <span data-i18n="legendActive">Mevcut mekân</span>
+                <span data-i18n="legendActive">Mevcut</span>
             </div>
             <div class="marker-key-item">
                 <span class="marker-key-canvas" id="key-ghost"></span>
@@ -575,7 +575,7 @@ document.addEventListener('DOMContentLoaded', function () {
             bulkPersonLabel:   'Anlatıcı:',
             bulkPersonHint:    '← tüm kartlara uygulanır',
             errorRequired:     'Zorunlu alanları doldurun ve en az bir duygu seçin.',
-            legendActive:      'Mevcut mekân',
+            legendActive:      'Mevcut',
             legendGhost:       'Artık mevcut değil',
             legendUncertain:   'Konum belirsiz',
             narratorLabel:     n => `Anlatıcı ${n}`,
@@ -645,7 +645,7 @@ document.addEventListener('DOMContentLoaded', function () {
             bulkPersonLabel:   'Person:',
             bulkPersonHint:    '← applies to all cards',
             errorRequired:     'Fill in required fields and select at least one emotion.',
-            legendActive:      'Active place',
+            legendActive:      'Still exists',
             legendGhost:       'No longer exists',
             legendUncertain:   'Location uncertain',
             narratorLabel:     n => `Narrator ${n}`,
@@ -715,7 +715,7 @@ document.addEventListener('DOMContentLoaded', function () {
             bulkPersonLabel:   'Պատմող:',
             bulkPersonHint:    '← կը կիրարկուի բոլոր քարտերուն',
             errorRequired:     'Լրացուցէ՛ք պարտադիր դաշտերը եւ ընտրեցէ՛ք առնուազն մէկ զգացում։',
-            legendActive:      'Գոյութիւն ունեցող վայր',
+            legendActive:      'Գոյութիւն ունեցող',
             legendGhost:       'Այլեւս չկայ',
             legendUncertain:   'Անորոշ դիրք',
             narratorLabel:     n => `Պատմող ${n}`,
@@ -1319,6 +1319,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 canvas._hovering = false;
                 mouseX = -999; mouseY = -999;
                 startAnim();
+                // Zoom rebuilds skip a hovered marker, leaving it CSS-scaled (and so
+                // slightly soft) at the wrong canvas size. Tell the map layer it can
+                // rebuild this one now. Bubbles so the listener can sit on the container.
+                canvas.dispatchEvent(new CustomEvent('marker:pointerout', { bubbles: true }));
             }
             canvas.addEventListener('mouseenter', (e) => pointerIn(e.clientX, e.clientY));
             canvas.addEventListener('mousemove', (e) => setPointer(e.clientX, e.clientY));
@@ -1591,11 +1595,18 @@ document.addEventListener('DOMContentLoaded', function () {
         // no allocation); the crisp 1:1 canvas rebuild follows at 'zoomend' and
         // clears these transforms. Without this the markers visibly lag the map
         // until the gesture settles.
+        // The built scale is tracked PER MARKER, not globally: a marker that was
+        // hovered during a rebuild keeps its old canvas, so it needs a different
+        // compensating transform from its neighbours. With a single global value
+        // the hovered marker got ratio 1 and froze at the wrong size.
         function applyLiveScale() {
-            const ratio = scaleForZoom(map.getZoom()) / lastBuiltScale;
+            const target = scaleForZoom(map.getZoom());
             stories.forEach(story => {
                 const inner = markerElements[story.id];
-                if (inner) inner.style.transform = ratio === 1 ? '' : `scale(${ratio})`;
+                if (!inner) return;
+                const built = inner._builtScale || 1;
+                const ratio = target / built;
+                inner.style.transform = ratio === 1 ? '' : `scale(${ratio})`;
             });
         }
         map.on('zoom', applyLiveScale);
@@ -1621,12 +1632,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!inner) return;
                 const oldCanvas = inner.querySelector('canvas');
                 if (!oldCanvas) return;
-                // Skip rebuild while user is hovering — avoids interrupting the animation.
-                // Leave the interim transform in place so a hovered marker still tracks zoom.
-                if (oldCanvas._hovering) return;
+                // Skip the rebuild while the pointer is on this marker — it would
+                // interrupt the repulsion animation mid-gesture. Its _builtScale is
+                // deliberately left untouched so applyLiveScale keeps compensating
+                // with a CSS transform, and rebuildMarkerScale() below restores the
+                // crisp 1:1 canvas as soon as the pointer leaves.
+                if (oldCanvas._hovering) { applyLiveScale(); return; }
                 // Canvas is about to be rebuilt at the correct physical size, so the
                 // interim CSS scale for this marker is no longer needed.
                 inner.style.transform = '';
+                inner._builtScale = cssScale;
                 // Rebuild canvas at new physical size — preserves sharpness.
                 // Pass ghost's current visible state so it doesn't restart from scratch.
                 const newCanvas = buildParticleMarker(story.emotions, physicalSize, story.locationKnown === false, !!story.isGhost, !!oldCanvas._ghostVisible);
@@ -1637,6 +1652,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 inner.replaceChild(newCanvas, oldCanvas);
             });
         }
+        // Rebuild any marker whose canvas is not at the current zoom's physical size.
+        // Fires when a hovered marker is released, since the zoom rebuild skipped it.
+        function rebuildStaleMarkerScales() {
+            const target = scaleForZoom(map.getZoom());
+            const physicalSize = Math.round(BASE_SIZE * target);
+            stories.forEach(story => {
+                const inner = markerElements[story.id];
+                if (!inner) return;
+                const oldCanvas = inner.querySelector('canvas');
+                if (!oldCanvas || oldCanvas._hovering) return;
+                if ((inner._builtScale || 1) === target) return;   // already correct
+                inner.style.transform = '';
+                inner._builtScale = target;
+                const newCanvas = buildParticleMarker(story.emotions, physicalSize, story.locationKnown === false, !!story.isGhost, !!oldCanvas._ghostVisible);
+                if (oldCanvas.destroyAnim) oldCanvas.destroyAnim();
+                inner.replaceChild(newCanvas, oldCanvas);
+            });
+        }
+        map.getContainer().addEventListener('marker:pointerout', rebuildStaleMarkerScales);
+
         // 'zoomend', not 'zoom': the latter fires every animation frame of a
         // pinch, so a single z15→z20 gesture crossed ~20 buckets and rebuilt
         // every canvas at each one. Rebuilding once the gesture settles keeps
@@ -1646,18 +1681,29 @@ document.addEventListener('DOMContentLoaded', function () {
         // Marker-state key: live mini markers that behave like the real ones —
         // the legend teaches by demonstrating, not by symbol.
         function buildMarkerKey() {
-            const KEY_SIZE = 24;
+            // The key teaches three STATES, not three emotions, so all three dots
+            // share one hue and differ only in saturation and motion. The previous
+            // version drew miniature particle clusters in different emotion colours,
+            // which at 24px read as three near-identical smudges — the colour
+            // difference implied the emotion mattered, and the state difference
+            // (the thing being taught) was the part you could not see.
+            const KEY_HUE  = emotionData.purple.hex;
+            const [r, g, b] = desaturate(KEY_HUE, 0.85);
+            const GHOST_HUE = `rgb(${r}, ${g}, ${b})`;
             [
-                { id: 'key-present',   emotions: ['green', 'orange'], drifting: false, ghost: false },
-                { id: 'key-ghost',     emotions: ['purple', 'blue'],  drifting: false, ghost: true  },
-                { id: 'key-uncertain', emotions: ['black', 'purple'], drifting: true,  ghost: false },
-            ].forEach(({ id, emotions, drifting, ghost }) => {
+                { id: 'key-present',   color: KEY_HUE   },  // still here: full saturation
+                { id: 'key-ghost',     color: GHOST_HUE },  // gone: drained of colour
+                { id: 'key-uncertain', color: GHOST_HUE },  // unlocatable: drained, and adrift
+            ].forEach(({ id, color }) => {
                 const slot = document.getElementById(id);
                 if (!slot) return;
                 const old = slot.querySelector('canvas');
                 if (old?.destroyAnim) old.destroyAnim();
                 slot.innerHTML = '';
-                slot.appendChild(buildParticleMarker(emotions, KEY_SIZE, drifting, ghost, true, true));
+                const dot = document.createElement('span');
+                dot.className = 'key-dot';
+                dot.style.backgroundColor = color;
+                slot.appendChild(dot);
             });
         }
 
