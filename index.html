@@ -922,11 +922,17 @@ document.addEventListener('DOMContentLoaded', function () {
     
     const map = new mapboxgl.Map({
         container: 'map',
-        // Basemap style. The Studio-hosted style below is the known-good default.
-        // A local copy exists at style/map.json (stripped to 8 layers, no labels) and
-        // style/map.original.json (untouched 50-layer download). To use the local
-        // stripped basemap, swap the line below for:  style: 'style/map.json',
-        // Verify markers still appear after switching -- see plan/ for the open issue.
+        // Local copy of the Studio style, stripped from 50 layers to 8: no POI
+        // labels, no admin boundaries, no country/state/continent labels — and no
+        // street or place names either. Holding the style locally removes the
+        // runtime dependency on the Mapbox account for the style document; tiles
+        // and glyphs still come from api.mapbox.com.
+        //
+        // style/map.original.json  — the untouched 50-layer download
+        // style/_test-labels.json — the same 8 layers plus street and neighbourhood
+        //   names (local names only). Unresolved: symbol layers appeared to stop
+        //   map.on('load') firing, but that was never reproduced reliably. Swap it
+        //   in and check the markers still appear.
         style: 'style/map.json',
         center: [29.033029012546365, 41.028500902039596],
         zoom: 15,

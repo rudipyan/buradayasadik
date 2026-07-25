@@ -8,10 +8,11 @@
     box-sizing: border-box;
 }
 
-/* Western Armenian is set in a typeface designed for Armenian (self-hosted,
-   works offline like the vendored mapbox-gl). unicode-range scopes it to
-   Armenian glyphs only, so Latin text keeps the existing type — the two
-   scripts coexist rather than Armenian falling back to a system afterthought. */
+/* Western Armenian is set in a typeface designed for Armenian. The font is
+   self-hosted, so unlike the map itself it genuinely works without a network.
+   unicode-range scopes it to Armenian glyphs only, so Latin text keeps the
+   existing type — the two scripts coexist rather than Armenian falling back to
+   a system afterthought. */
 @font-face {
     font-family: 'Noto Serif Armenian';
     font-style: normal;
