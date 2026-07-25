@@ -1727,8 +1727,14 @@ document.addEventListener('DOMContentLoaded', function () {
             // reads as round. Uneven distances made it look like a triangle.
             // Fixed rather than random, so the key is identical on every load and in
             // every screenshot that ends up in the thesis.
-            const CLOUD = [[0, 0.95], [60, 0.86], [120, 0.98], [180, 0.84], [240, 0.94], [300, 0.88]];
+            const CLOUD = [[0, 0], [0, 0.95], [60, 0.86], [120, 0.98], [180, 0.84], [240, 0.94], [300, 0.88]];
             const hues  = Object.keys(emotionData).map(k => emotionData[k].hex);
+            // Breathing offsets are deliberately SCRAMBLED, not sequential. Stagger
+            // dots in order around a ring and the eye reads the result as rotation —
+            // that is exactly how a loading spinner is built. Out-of-order offsets
+            // give the same shimmer with no direction to it, which is what the map
+            // gets for free by giving every particle a random phase.
+            const PHASE = [-1.4, -4.6, -0.3, -3.1, -2.2, -5.4, -1.9];
 
             // All three clouds are the same size. The states are told by colour and
             // by motion, not by spread — a bigger cloud just read as a different
@@ -1755,13 +1761,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     const dot = document.createElement('span');
                     dot.className = ghost ? 'key-dot is-ghost' : 'key-dot';
                     if (ghost) {
-                        const [r, g, b] = desaturate(hues[i], 0.85);
+                        const [r, g, b] = desaturate(hues[i % hues.length], 0.85);
                         dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-                        // Per-dot phase, echoing the random phase each particle gets
-                        // on the map, so the cloud shimmers instead of blinking as one.
-                        dot.style.animationDelay = `${-(i * 0.4).toFixed(2)}s`;
+                        dot.style.animationDelay = `${PHASE[i]}s`;
                     } else {
-                        dot.style.backgroundColor = hues[i];
+                        dot.style.backgroundColor = hues[i % hues.length];
                     }
                     dot.style.left = (CELL / 2 + d * Math.cos(a) - DOT / 2) + 'px';
                     dot.style.top  = (CELL / 2 + d * Math.sin(a) - DOT / 2) + 'px';

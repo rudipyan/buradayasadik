@@ -664,10 +664,12 @@ body {
     border-radius: 50%;
 }
 /* Gone / uncertain rows breathe, echoing the ghost pulse on the map. The map
-   bottoms out at 0.08 alpha, but with six dots instead of seventy that reads as
-   simply absent, so the floor is lifted to 0.14 to stay perceptible. */
+   bottoms out at 0.08 alpha, but with a handful of dots instead of seventy that
+   reads as simply absent, so the floor is lifted to 0.14 to stay perceptible.
+   6s rather than the map's 2.5s: at spinner tempo this looks like a progress
+   indicator. Slow enough and it reads as breathing. */
 .key-dot.is-ghost {
-    animation: key-breathe 2.5s ease-in-out infinite;
+    animation: key-breathe 6s ease-in-out infinite;
 }
 @keyframes key-breathe {
     0%, 100% { opacity: 0.14; }
