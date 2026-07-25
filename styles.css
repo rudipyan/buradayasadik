@@ -651,27 +651,47 @@ body {
     letter-spacing: 0.2px;
 }
 .marker-key-canvas {
-    /* 34px, not 24: at 24 the tight and wide clusters were the same smudge and
-       the two states the key exists to separate were indistinguishable. */
+    /* Six positioned dots, not a shrunken 70-particle canvas — see buildMarkerKey. */
     width: 34px;
     height: 34px;
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
 }
-/* Uncertain-location key drifts, echoing the drifting map markers. The row is
-   already distinguishable without it — the wide cluster reads in a still frame —
-   so this reinforces rather than carries the meaning. */
-.marker-key-canvas.key-drift canvas {
-    animation: key-drift 5s ease-in-out infinite alternate;
+.key-dot {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+/* Gone / uncertain rows breathe, echoing the ghost pulse on the map. The map
+   bottoms out at 0.08 alpha, but with six dots instead of seventy that reads as
+   simply absent, so the floor is lifted to 0.14 to stay perceptible. */
+.key-dot.is-ghost {
+    animation: key-breathe 2.5s ease-in-out infinite;
+}
+@keyframes key-breathe {
+    0%, 100% { opacity: 0.14; }
+    50%      { opacity: 0.55; }
+}
+/* Uncertain-location row wanders as a whole cloud. All three clouds are the same
+   size, so this motion is the only thing separating "gone" from "cannot be
+   located" — it has to be plainly visible, and it has to wander rather than
+   oscillate, or it reads as a mechanical shuttle rather than a place that will
+   not hold still. */
+.marker-key-canvas.key-drift {
+    animation: key-drift 4s ease-in-out infinite;
 }
 @keyframes key-drift {
-    from { transform: translate(-3px, 2px); }
-    to   { transform: translate(3px, -2px); }
+    0%   { transform: translate(-6px,  3px); }
+    25%  { transform: translate( 4px, -5px); }
+    50%  { transform: translate( 6px,  4px); }
+    75%  { transform: translate(-3px,  6px); }
+    100% { transform: translate(-6px,  3px); }
 }
 @media (prefers-reduced-motion: reduce) {
-    .marker-key-canvas.key-drift canvas { animation: none; }
+    /* Match the map: autonomous motion stops, ghosts hold a static mid-pulse */
+    .marker-key-canvas.key-drift { animation: none; }
+    .key-dot.is-ghost { animation: none; opacity: 0.30; }
 }
 
 /* ── Entrance intro overlay ─────────────── */

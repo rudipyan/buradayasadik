@@ -1718,22 +1718,55 @@ document.addEventListener('DOMContentLoaded', function () {
             // Both are visible in a still frame. That matters: this legend gets
             // screenshotted into the thesis and slides, where animation is lost.
             // Breathing and drift then reinforce the states rather than carrying them.
-            const KEY_SIZE = 34;
-            const allHues  = Object.keys(emotionData);
+            // SIX dots, not the map's 70. The full marker is a 70-particle cloud;
+            // shrunk into a sidebar cell it becomes an illegible smudge and all three
+            // rows look the same. Six dots — one per emotion — keep the cloud gesture
+            // while staying countable, which is what makes the states readable.
+            const CELL = 34, DOT = 5, RADIUS = 7;
+            // Evenly spaced angles with only slight radius variation, so the cloud
+            // reads as round. Uneven distances made it look like a triangle.
+            // Fixed rather than random, so the key is identical on every load and in
+            // every screenshot that ends up in the thesis.
+            const CLOUD = [[0, 0.95], [60, 0.86], [120, 0.98], [180, 0.84], [240, 0.94], [300, 0.88]];
+            const hues  = Object.keys(emotionData).map(k => emotionData[k].hex);
+
+            // All three clouds are the same size. The states are told by colour and
+            // by motion, not by spread — a bigger cloud just read as a different
+            // quantity of dots rather than a different kind of place.
             [
-                // id,               drifting, ghost
-                { id: 'key-present',   drifting: false, ghost: false },
-                { id: 'key-ghost',     drifting: false, ghost: true  },
-                { id: 'key-uncertain', drifting: true,  ghost: false },
-            ].forEach(({ id, drifting, ghost }) => {
+                // Full colour, still: the place is still there.
+                { id: 'key-present',   ghost: false },
+                // Drained + breathing: the place is gone.
+                { id: 'key-ghost',     ghost: true  },
+                // Drained + breathing + wandering: the location is unknown.
+                // Desaturated because the map's only uncertain story (18) is also a
+                // ghost, so this is what a visitor actually sees.
+                { id: 'key-uncertain', ghost: true  },
+            ].forEach(({ id, ghost }) => {
+                const radius = RADIUS;
                 const slot = document.getElementById(id);
                 if (!slot) return;
                 const old = slot.querySelector('canvas');
                 if (old?.destroyAnim) old.destroyAnim();
                 slot.innerHTML = '';
-                // pinVisible = true: legend ghosts keep the desaturated breath but skip
-                // the haunting scheduler, so the row never blanks while being read.
-                slot.appendChild(buildParticleMarker(allHues, KEY_SIZE, drifting, ghost, true, true));
+                CLOUD.forEach(([deg, distN], i) => {
+                    const a = deg * Math.PI / 180;
+                    const d = distN * radius;
+                    const dot = document.createElement('span');
+                    dot.className = ghost ? 'key-dot is-ghost' : 'key-dot';
+                    if (ghost) {
+                        const [r, g, b] = desaturate(hues[i], 0.85);
+                        dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                        // Per-dot phase, echoing the random phase each particle gets
+                        // on the map, so the cloud shimmers instead of blinking as one.
+                        dot.style.animationDelay = `${-(i * 0.4).toFixed(2)}s`;
+                    } else {
+                        dot.style.backgroundColor = hues[i];
+                    }
+                    dot.style.left = (CELL / 2 + d * Math.cos(a) - DOT / 2) + 'px';
+                    dot.style.top  = (CELL / 2 + d * Math.sin(a) - DOT / 2) + 'px';
+                    slot.appendChild(dot);
+                });
             });
         }
 
