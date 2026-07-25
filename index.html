@@ -8,784 +8,7 @@
     <!-- Mapbox CSS (vendored v2.15.0 — works offline) -->
     <link href="mapbox-gl.css" rel="stylesheet">
     
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* Western Armenian is set in a typeface designed for Armenian (self-hosted,
-           works offline like the vendored mapbox-gl). unicode-range scopes it to
-           Armenian glyphs only, so Latin text keeps the existing type — the two
-           scripts coexist rather than Armenian falling back to a system afterthought. */
-        @font-face {
-            font-family: 'Noto Serif Armenian';
-            font-style: normal;
-            font-weight: 400 700;
-            font-display: swap;
-            src: url('fonts/NotoSerifArmenian-wght400-700.woff2') format('woff2');
-            unicode-range: U+0308, U+0530-058F, U+2010, U+2024, U+25CC, U+FB13-FB17;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-        }
-
-        body {
-            font-family: 'Noto Serif Armenian', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f5f5;
-            color: #333;
-        }
-
-        #map {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-        }
-
-        /* ── Sidebar ─────────────────────────────────── */
-        .controls {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
-            z-index: 100;
-            width: 288px;
-            font-size: 13px;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
-            overflow-x: hidden;
-            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.28s ease;
-            scrollbar-width: thin;
-            scrollbar-color: #ddd transparent;
-        }
-        .controls::-webkit-scrollbar { width: 4px; }
-        .controls::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
-
-        .controls.hidden {
-            transform: translateX(calc(-100% - 30px));
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* Sidebar header */
-        .sidebar-header {
-            padding: 16px 16px 0 16px;
-            position: sticky;
-            top: 0;
-            background: #fff;
-            z-index: 1;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .sidebar-top-row {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-        }
-
-        .controls h1 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1a1a1a;
-            line-height: 1.3;
-            flex: 1;
-            padding-right: 8px;
-        }
-
-        .controls .subtitle {
-            font-size: 11px;
-            color: #aaa;
-            margin-top: 3px;
-            font-style: italic;
-        }
-
-        #sidebar-close {
-            background: none;
-            border: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #aaa;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: background 0.15s, color 0.15s;
-        }
-        #sidebar-close:hover { background: #f3f3f3; color: #444; }
-
-        /* Search bar */
-        .search-wrap {
-            padding: 10px 16px 0 16px;
-        }
-        .search-input {
-            width: 100%;
-            padding: 7px 10px 7px 32px;
-            border: 1px solid #e5e5e5;
-            border-radius: 8px;
-            font-size: 12px;
-            color: #333;
-            background: #fafafa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
-            outline: none;
-            transition: border-color 0.15s, background 0.15s;
-        }
-        .search-input:focus {
-            border-color: #bbb;
-            background-color: #fff;
-        }
-        .search-input::placeholder { color: #bbb; }
-
-        /* Sidebar body */
-        .sidebar-body {
-            padding: 12px 16px 16px 16px;
-        }
-
-        /* Sidebar toggle button (when closed) */
-        #sidebar-toggle {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 101;
-            background: white;
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.06);
-            width: 38px;
-            height: 38px;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            color: #555;
-            transition: background 0.15s;
-        }
-        #sidebar-toggle.collapsed { display: flex; }
-        #sidebar-toggle:hover { background: #f5f5f5; }
-
-        /* ── Filter sections ──────────────────────────── */
-        .filter-section {
-            margin-bottom: 16px;
-        }
-
-        .filter-section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .filter-section h3 {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            color: #888;
-        }
-
-        .toggle-all-link {
-            font-size: 11px;
-            color: #aaa;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            transition: color 0.15s;
-        }
-        .toggle-all-link:hover { color: #555; }
-
-        /* People chips */
-        .chips-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            justify-content: center;
-        }
-
-        .chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            flex: 0 0 auto;
-            width: fit-content;
-            white-space: nowrap;
-            padding: 4px 10px;
-            border-radius: 20px;
-            border: 1.5px solid #e5e5e5;
-            background: #fff;
-            font-size: 10.5px;
-            font-weight: 500;
-            color: #666;
-            cursor: pointer;
-            transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
-            user-select: none;
-        }
-        .chip:hover {
-            border-color: #ccc;
-            background: #f9f9f9;
-        }
-        .chip.active {
-            background: #1a1a1a;
-            border-color: #1a1a1a;
-            color: #fff;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-        }
-        .chip.active:hover {
-            background: #333;
-            border-color: #333;
-        }
-
-        /* Dot inside chip (for person avatar) */
-        .chip-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-            opacity: 0.6;
-            flex-shrink: 0;
-        }
-
-        /* Emotion chips — pill with color swatch */
-        .emotion-chips-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px 6px;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-        }
-
-        .emotion-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 9px;
-            border-radius: 20px;
-            flex: 0 0 auto;
-            width: fit-content;
-            max-width: 100%;
-            white-space: nowrap;
-            border: 1.5px solid #e5e5e5;
-            background: #fff;
-            font-size: 10.5px;
-            font-weight: 500;
-            color: #555;
-            cursor: pointer;
-            transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, opacity 0.15s;
-            user-select: none;
-        }
-        .emotion-chip:hover {
-            border-color: #ccc;
-            background: #f9f9f9;
-        }
-        .emotion-chip .swatch {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            transition: opacity 0.15s;
-        }
-        .emotion-chip.active {
-            border-color: transparent;
-            color: #fff;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.22);
-        }
-        .emotion-chip:not(.active) .swatch {
-            opacity: 0.5;
-        }
-        .emotion-chip:not(.active) {
-            color: #888;
-        }
-
-        /* Divider */
-        .sidebar-divider {
-            height: 1px;
-            background: #f0f0f0;
-            margin: 12px 0;
-        }
-
-        /* Stats */
-        .stats {
-            background: #fafafa;
-            border: 1px solid #f0f0f0;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 11px;
-            color: #888;
-            line-height: 1.7;
-        }
-        .stats-count {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1a1a1a;
-            display: block;
-            line-height: 1.2;
-            margin-bottom: 4px;
-        }
-        .stats-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #bbb;
-            display: block;
-            margin-bottom: 8px;
-        }
-        .stats-detail {
-            font-size: 11px;
-            color: #aaa;
-            line-height: 1.6;
-        }
-
-        /* "No results" notice inside sidebar */
-        .no-results {
-            font-size: 11px;
-            color: #bbb;
-            text-align: center;
-            padding: 8px 0;
-            display: none;
-        }
-
-        /* ── Mapbox popup ────────────────────────────── */
-        .mapboxgl-popup-content {
-            font-family: 'Noto Serif Armenian', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            padding: 14px 16px !important;
-            border-radius: 10px !important;
-            max-width: 400px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
-        }
-
-        .mapboxgl-popup-content h3 {
-            margin: 0 0 4px 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: #1a1a1a;
-        }
-
-        .mapboxgl-popup-content p {
-            margin: 0 0 0.75rem 0;
-            font-size: 12px;
-            line-height: 1.55;
-            color: #555;
-        }
-
-        .mapboxgl-popup-content .person-name {
-            color: #aaa;
-            font-size: 11px;
-            font-weight: 500;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .video-player {
-            margin: 1rem 0 0 0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .video-player iframe {
-            width: 100%;
-            height: 200px;
-            border: none;
-        }
-
-        /* ── Floating video panel ────────────────────── */
-        #video-panel {
-            display: none;
-            position: fixed;
-            bottom: 32px;
-            right: 32px;
-            width: 480px;
-            background: #111;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            z-index: 9999;
-        }
-        #video-panel.visible { display: block; }
-        #video-panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            background: #1a1a1a;
-        }
-        #video-panel-title {
-            font-size: 12px;
-            color: #ccc;
-            font-style: italic;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        #video-panel-close {
-            background: none;
-            border: none;
-            color: #aaa;
-            font-size: 18px;
-            cursor: pointer;
-            line-height: 1;
-            padding: 0 0 0 12px;
-            flex-shrink: 0;
-        }
-        #video-panel-close:hover { color: #fff; }
-        #video-panel iframe {
-            display: block;
-            width: 100%;
-            height: 270px;
-            border: none;
-        }
-
-        /* ── Admin panel ─────────────────────────────── */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.45);
-            z-index: 9998;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-overlay.visible { display: flex; }
-
-        .modal-box {
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.22);
-            padding: 24px;
-            width: 440px;
-            max-width: calc(100vw - 40px);
-            max-height: calc(100vh - 60px);
-            overflow-y: auto;
-        }
-        .modal-box h2 {
-            font-size: 15px;
-            font-weight: 600;
-            color: #1a1a1a;
-            margin: 0 0 16px 0;
-        }
-        .modal-field-label {
-            display: block;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #888;
-            margin: 14px 0 4px 0;
-        }
-        .modal-box input[type="text"],
-        .modal-box input[type="password"],
-        .modal-box input[type="number"],
-        .modal-box textarea {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #e5e5e5;
-            border-radius: 8px;
-            font-size: 13px;
-            color: #333;
-            outline: none;
-            transition: border-color 0.15s;
-            box-sizing: border-box;
-            font-family: inherit;
-        }
-        .modal-box input:focus, .modal-box textarea:focus { border-color: #bbb; }
-        .modal-box textarea { min-height: 80px; resize: vertical; }
-        .modal-error {
-            font-size: 12px;
-            color: #e74c3c;
-            margin-top: 8px;
-            display: none;
-        }
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 20px;
-            justify-content: flex-end;
-        }
-        .btn-primary {
-            padding: 8px 18px;
-            background: #1a1a1a;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .btn-primary:hover { background: #333; }
-        .btn-secondary {
-            padding: 8px 14px;
-            background: #f5f5f5;
-            color: #555;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .btn-secondary:hover { background: #eee; }
-        .emotion-check-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 4px;
-        }
-        .emotion-check-grid label {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            border: 1.5px solid #e5e5e5;
-            font-size: 12.5px;
-            font-weight: 500;
-            color: #666;
-            cursor: pointer;
-            transition: background 0.15s, border-color 0.15s, color 0.15s;
-            user-select: none;
-        }
-        .emotion-check-grid input[type="checkbox"] { display: none; }
-        .emotion-check-grid label.checked { color: #fff; border-color: transparent; }
-        .coord-row { display: flex; gap: 8px; }
-        .coord-row > div { flex: 1; }
-        .inline-check {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: #555;
-            margin-top: 6px;
-        }
-        .inline-check input { width: auto; }
-
-        /* ── Play video button inside popup ─────────── */
-        .play-video-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 10px;
-            padding: 6px 14px;
-            background: #1a1a1a;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .play-video-btn:hover { background: #444; }
-
-        /* ── Language switcher ───────────────────────
-           All three languages stay visible at all times — the co-presence of
-           the three scripts (incl. Western Armenian) is part of the content. */
-        #lang-switcher {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            background: rgba(255,255,255,0.92);
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 20px;
-            padding: 4px 8px;
-            gap: 0;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-        }
-        .lang-option {
-            font-size: 11px;
-            font-weight: 700;
-            color: #aaa;
-            padding: 2px 6px;
-            border-radius: 12px;
-            cursor: pointer;
-            white-space: nowrap;
-            border: none;
-            background: none;
-            transition: color 0.15s, background 0.15s;
-        }
-        .lang-option.active {
-            color: #1a1a1a;
-            background: #f0f0f0;
-        }
-        .lang-option:hover {
-            color: #1a1a1a;
-        }
-
-        /* ── Story management modal ─────────────── */
-        .mgmt-tabs {
-            display: flex;
-            border-bottom: 1.5px solid #f0f0f0;
-            margin-bottom: 12px;
-        }
-        .mgmt-tab {
-            background: none;
-            border: none;
-            border-bottom: 2px solid transparent;
-            padding: 6px 14px;
-            font-size: 12px;
-            color: #aaa;
-            cursor: pointer;
-            margin-bottom: -2px;
-            font-weight: 500;
-        }
-        .mgmt-tab.active { color: #1a1a1a; font-weight: 700; border-bottom-color: #1a1a1a; }
-        .mgmt-search-row { display: flex; gap: 6px; margin-bottom: 8px; }
-        .mgmt-search-row input { flex: 1; }
-        .mgmt-story-list { border: 1px solid #eee; border-radius: 7px; overflow: hidden; max-height: 260px; overflow-y: auto; }
-        .mgmt-story-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #f5f5f5; font-size: 11px; }
-        .mgmt-story-row:last-child { border-bottom: none; }
-        .mgmt-story-info { flex: 1; min-width: 0; }
-        .mgmt-story-info strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .mgmt-story-info span { font-size: 10px; color: #bbb; }
-        .mgmt-story-actions { display: flex; gap: 4px; flex-shrink: 0; }
-        .mgmt-btn-edit { background: #f4f4f4; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer; }
-        .mgmt-btn-del  { background: #fff0f0; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; color: #e74c3c; cursor: pointer; }
-        .mgmt-count { font-size: 10px; color: #bbb; margin-top: 5px; }
-        .mgmt-back-btn { background: none; border: none; font-size: 11px; color: #888; cursor: pointer; padding: 0; margin-bottom: 10px; }
-        .mgmt-back-btn:hover { color: #1a1a1a; }
-        /* Bulk add */
-        .bulk-person-row { display: flex; align-items: center; gap: 8px; background: #fffbf0; border: 1px solid #ffe4a0; border-radius: 7px; padding: 8px 10px; margin-bottom: 10px; }
-        .bulk-person-hint { font-size: 9px; color: #bbb; white-space: nowrap; }
-        .bulk-card { border: 1px solid #e8e8e8; border-radius: 7px; padding: 10px; background: #fff; margin-bottom: 8px; position: relative; }
-        .bulk-card-num { font-size: 9px; font-weight: 700; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-        .bulk-remove-btn { position: absolute; top: 8px; right: 8px; background: none; border: none; color: #ddd; font-size: 14px; cursor: pointer; line-height: 1; }
-        .bulk-remove-btn:hover { color: #e74c3c; }
-        .bulk-add-card-btn { width: 100%; border: 1.5px dashed #ddd; border-radius: 7px; padding: 8px; background: #fafafa; color: #bbb; font-size: 11px; cursor: pointer; margin-bottom: 8px; }
-        .bulk-add-card-btn:hover { border-color: #aaa; color: #888; }
-        .bulk-save-btn { width: 100%; }
-        .modal-input { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; margin-bottom: 4px; font-family: inherit; box-sizing: border-box; }
-        .modal-textarea { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; height: 80px; resize: vertical; font-family: inherit; box-sizing: border-box; margin-bottom: 4px; }
-
-        /* ── Marker-state key — live mini markers ── */
-        .marker-key {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        .marker-key-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            color: #aaa;
-            letter-spacing: 0.2px;
-        }
-        .marker-key-canvas {
-            width: 24px;
-            height: 24px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        /* Uncertain-location key wobbles gently, echoing the drifting map markers */
-        .marker-key-canvas.key-drift canvas {
-            animation: key-drift 6s ease-in-out infinite alternate;
-        }
-        @keyframes key-drift {
-            from { transform: translate(-2px, 1px); }
-            to   { transform: translate(2px, -1px); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .marker-key-canvas.key-drift canvas { animation: none; }
-        }
-
-        /* ── Entrance intro overlay ─────────────── */
-        #intro-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 10000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 24px;
-            background: rgba(245,245,245,0.55);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            cursor: default;
-            transition: opacity 0.8s ease;
-        }
-        #intro-overlay.visible { display: flex; }
-        #intro-overlay.dismissing { opacity: 0; }
-        #intro-inner { max-width: 560px; }
-        #intro-heading {
-            font-family: 'Noto Serif Armenian', Georgia, 'Times New Roman', serif;
-            font-size: 40px;
-            font-weight: 600;
-            color: #1a1a1a;
-            letter-spacing: 0.5px;
-        }
-        #intro-body {
-            margin-top: 18px;
-            font-size: 15px;
-            line-height: 1.8;
-            color: #555;
-        }
-        #intro-lang {
-            margin-top: 30px;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .intro-lang-btn {
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 600;
-            color: #1a1a1a;
-            background: rgba(255,255,255,0.7);
-            border: 1.5px solid rgba(0,0,0,0.15);
-            border-radius: 20px;
-            padding: 8px 20px;
-            cursor: pointer;
-            transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
-        }
-        .intro-lang-btn:hover {
-            background: #1a1a1a;
-            border-color: #1a1a1a;
-            color: #fff;
-        }
-        .intro-lang-btn:active { transform: scale(0.97); }
-        .intro-lang-btn.active {
-            background: #1a1a1a;
-            border-color: #1a1a1a;
-            color: #fff;
-        }
-        #intro-enter {
-            margin-top: 22px;
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 600;
-            color: #fff;
-            background: #1a1a1a;
-            border: none;
-            border-radius: 22px;
-            padding: 11px 28px;
-            cursor: pointer;
-            transition: background 0.15s, transform 0.1s;
-        }
-        #intro-enter:hover { background: #333; }
-        #intro-enter:active { transform: scale(0.97); }
-        @media (prefers-reduced-motion: reduce) {
-            #intro-overlay { transition: none; }
-            .intro-lang-btn { transition: none; }
-            #intro-enter { transition: none; }
-        }
-    </style>
+    <link href="styles.css" rel="stylesheet">
 </head>
 <body>
 
@@ -800,8 +23,8 @@
 <!-- Entrance intro overlay (shown once per device) -->
 <div id="intro-overlay" aria-hidden="true">
     <div id="intro-inner">
-        <h1 id="intro-heading" data-i18n="introHeading">Burada Yaşadık</h1>
-        <p id="intro-body" data-i18n="introBody">Burada Yaşadık, İstanbul'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.</p>
+        <h1 id="intro-heading" data-i18n="introHeading">Burada yaşıyoruz</h1>
+        <p id="intro-body" data-i18n="introBody">Burada yaşıyoruz, İstanbul'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.</p>
         <div id="intro-lang" role="group" aria-label="Language / Dil / Լեզու">
             <button type="button" class="intro-lang-btn" data-lang="tr">Türkçe</button>
             <button type="button" class="intro-lang-btn" data-lang="en">English</button>
@@ -829,7 +52,7 @@
         <div class="sidebar-top-row">
             <div>
                 <h1 data-i18n="panelTitle">Üsküdar Tanıklık Haritası</h1>
-                <p class="subtitle" data-i18n="subtitle">Üsküdar Sözlü Tarih Projesi</p>
+                <p class="subtitle" data-i18n="subtitle">kalan, kaybolan, bilinmeyen</p>
             </div>
             <button id="sidebar-close" onclick="toggleSidebar()" data-i18n-title="close" title="Kapat">✕</button>
         </div>
@@ -868,15 +91,14 @@
         <!-- STATS -->
         <div class="stats">
             <span class="stats-count" id="storyCount">—</span>
-            <span class="stats-label" data-i18n="statsLabel">Görünen Anı</span>
-            <div class="stats-detail" id="activeFilters"></div>
+            <span class="stats-label" data-i18n="statsLabel">Görünen tanıklık</span>
         </div>
 
         <!-- Marker-state key — live mini particle markers, filled in on map load -->
         <div class="marker-key">
             <div class="marker-key-item">
                 <span class="marker-key-canvas" id="key-present"></span>
-                <span data-i18n="legendActive">Mevcut mekân</span>
+                <span data-i18n="legendActive">Mevcut</span>
             </div>
             <div class="marker-key-item">
                 <span class="marker-key-canvas" id="key-ghost"></span>
@@ -894,7 +116,7 @@
 <div class="modal-overlay" id="admin-login-overlay">
     <div class="modal-box">
         <h2 data-i18n="adminLoginTitle">Yönetici Girişi</h2>
-        <span class="modal-field-label" data-i18n="adminUser">Kullanıcı Adı</span>
+        <span class="modal-field-label" data-i18n="adminUser">Kullanıcı adı</span>
         <input type="text" id="admin-username" autocomplete="off" placeholder="admin">
         <span class="modal-field-label" data-i18n="adminPass">Şifre</span>
         <input type="password" id="admin-password" placeholder="••••••••">
@@ -917,7 +139,7 @@
             <button class="mgmt-tab active" id="tab-stories" onclick="switchMgmtTab('stories')"
                 data-i18n="tabStories">Tanıklıklar</button>
             <button class="mgmt-tab" id="tab-bulk" onclick="switchMgmtTab('bulk')"
-                data-i18n="tabBulk">Toplu Ekle</button>
+                data-i18n="tabBulk">Toplu ekle</button>
         </div>
 
         <!-- ── TAB 1: Stories list + edit ── -->
@@ -969,6 +191,11 @@
                     <label for="edit-ghost" data-i18n="ghostLabel">Mevcut değil</label>
                 </div>
 
+                <div class="inline-check" style="margin-top:4px">
+                    <input type="checkbox" id="edit-location-unknown">
+                    <label for="edit-location-unknown" data-i18n="locationUnknownLabel">Konum belirsiz</label>
+                </div>
+
                 <span class="modal-field-label" data-i18n="emotionLabel">Duygular *</span>
                 <div class="emotion-check-grid" id="edit-emotion-checkboxes"></div>
 
@@ -981,7 +208,7 @@
                     <button class="btn-secondary" onclick="showListView()"
                         data-i18n="cancelBtn">İptal</button>
                     <button class="btn-primary" onclick="saveEditedStory()"
-                        data-i18n="saveBtn">Değişiklikleri Kaydet</button>
+                        data-i18n="saveBtn">Değişiklikleri kaydet</button>
                 </div>
             </div>
         </div>
@@ -997,10 +224,12 @@
             <button class="bulk-add-card-btn" onclick="addBulkCard()"
                 data-i18n="addCardBtn">+ Tanıklık ekle</button>
             <button class="btn-primary bulk-save-btn" id="bulk-save-btn"
-                onclick="saveBulkStories()">Tümünü Kaydet</button>
+                onclick="saveBulkStories()">Tümünü kaydet</button>
         </div>
 
         <div class="modal-actions" style="margin-top:12px;border-top:1px solid #f0f0f0;padding-top:12px">
+            <button class="btn-secondary" onclick="exportStoriesJson()"
+                data-i18n="exportBtn">JSON olarak dışa aktar</button>
             <button class="btn-secondary" onclick="closeStoryManagement()"
                 data-i18n="cancelBtn">İptal</button>
         </div>
@@ -1008,9 +237,15 @@
 </div>
 
 <!-- Mapbox GL JS Library (vendored v2.15.0 — works offline) -->
-<script src="mapbox-gl.js"></script>
+<script src="mapbox-gl.js" defer></script>
 
 <script>
+// The 963 KB Mapbox bundle is deferred so it no longer blocks first paint.
+// Deferred scripts are guaranteed to run before DOMContentLoaded, so `mapboxgl`
+// is defined by the time this body executes. Body left un-reindented on purpose
+// to keep the diff reviewable; the window exports at the bottom re-publish the
+// functions that inline on* attributes call.
+document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // CONFIGURATION
     // ========================================
@@ -1308,7 +543,7 @@
     // ========================================
     const i18n = {
         tr: {
-            panelTitle:        'Burada Yaşadık',
+            panelTitle:        'Burada yaşıyoruz',
             peopleHeader:      'Kişiler',
             emotionsHeader:    'Duygular',
             toggleNone:        'Seçimleri temizle',
@@ -1318,12 +553,12 @@
             editBtn:           'Düzenle',
             deleteBtn:         'Sil',
             backBtn:           '← Listeye dön',
-            saveBtn:           'Değişiklikleri Kaydet',
+            saveBtn:           'Değişiklikleri kaydet',
             cancelBtn:         'İptal',
             addCardBtn:        '+ Tanıklık ekle',
-            saveAllBtn:        n => `Tümünü Kaydet (${n} tanıklık)`,
+            saveAllBtn:        n => `Tümünü kaydet (${n} tanıklık)`,
             tabStories:        'Tanıklıklar',
-            tabBulk:           'Toplu Ekle',
+            tabBulk:           'Toplu ekle',
             modalTitle:        'Tanıklık Yönetimi',
             personLabel:       'Kişi',
             titleLabel:        'Başlık',
@@ -1333,30 +568,31 @@
             latLabel:          'Enlem',
             lngLabel:          'Boylam',
             ghostLabel:        'Artık mevcut değil',
+            locationUnknownLabel: 'Konum belirsiz',
             emotionLabel:      'Duygular',
             videoLabel:        'YouTube URL (isteğe bağlı)',
             bulkPersonLabel:   'Anlatıcı:',
             bulkPersonHint:    '← tüm kartlara uygulanır',
             errorRequired:     'Zorunlu alanları doldurun ve en az bir duygu seçin.',
-            legendActive:      'Mevcut mekân',
+            legendActive:      'Mevcut',
             legendGhost:       'Artık mevcut değil',
             legendUncertain:   'Konum belirsiz',
             narratorLabel:     n => `Anlatıcı ${n}`,
-            watchBtn:          '▶ Tanıklığı İzle',
+            watchBtn:          '▶ Tanıklığı izle',
             popupPeriod:       'Dönem',
             adminLoginTitle:   'Yönetici Girişi',
-            adminUser:         'Kullanıcı Adı',
+            adminUser:         'Kullanıcı adı',
             adminPass:         'Şifre',
             adminError:        'Kullanıcı adı veya şifre hatalı.',
             adminLoginBtn:     'Giriş',
-            introHeading:      'Burada Yaşadık',
-            introBody:         'Burada Yaşadık, İstanbul\'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.',
+            introHeading:      'Burada yaşıyoruz',
+            introBody:         'Burada yaşıyoruz, İstanbul\'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.',
             introEnter:        'Haritaya gir →',
             pageTitle:         'Üsküdar Tanıklık Haritası',
             videoPanelTitle:   'Sözlü tarih görüşmesi (kayıt)',
-            subtitle:          'Üsküdar Sözlü Tarih Projesi',
+            subtitle:          'kalan, kaybolan, bilinmeyen',
             close:             'Kapat',
-            statsLabel:        'Görünen Anı',
+            statsLabel:        'Görünen tanıklık',
             locationLabel:     'Konum *',
             bulkCardNum:       n => `Tanıklık ${n}`,
             deleteConfirm:     'Bu tanıklığı silmek istediğinize emin misiniz?',
@@ -1373,9 +609,11 @@
             emo_green:         'Aidiyet',
             emo_red:           'Öfke',
             emo_black:         'Korku',
+            exportBtn:         'JSON olarak dışa aktar',
+            mapLoadError:      'Harita yüklenemedi. Bağlantınızı denetleyip sayfayı yenileyin.',
         },
         en: {
-            panelTitle:        'We Lived Here',
+            panelTitle:        'We live here',
             peopleHeader:      'People',
             emotionsHeader:    'Emotions',
             toggleNone:        'Deselect all',
@@ -1385,12 +623,12 @@
             editBtn:           'Edit',
             deleteBtn:         'Delete',
             backBtn:           '← Back to list',
-            saveBtn:           'Save Changes',
+            saveBtn:           'Save changes',
             cancelBtn:         'Cancel',
             addCardBtn:        '+ Add story',
-            saveAllBtn:        n => `Save All (${n} stories)`,
+            saveAllBtn:        n => `Save all (${n} stories)`,
             tabStories:        'Stories',
-            tabBulk:           'Bulk Add',
+            tabBulk:           'Bulk add',
             modalTitle:        'Story Management',
             personLabel:       'Person',
             titleLabel:        'Title',
@@ -1400,12 +638,13 @@
             latLabel:          'Latitude',
             lngLabel:          'Longitude',
             ghostLabel:        'No longer exists',
+            locationUnknownLabel: 'Location uncertain',
             emotionLabel:      'Emotions',
             videoLabel:        'YouTube URL (optional)',
             bulkPersonLabel:   'Person:',
             bulkPersonHint:    '← applies to all cards',
             errorRequired:     'Fill in required fields and select at least one emotion.',
-            legendActive:      'Active place',
+            legendActive:      'Still exists',
             legendGhost:       'No longer exists',
             legendUncertain:   'Location uncertain',
             narratorLabel:     n => `Narrator ${n}`,
@@ -1416,14 +655,14 @@
             adminPass:         'Password',
             adminError:        'Incorrect username or password.',
             adminLoginBtn:     'Login',
-            introHeading:      'We Lived Here',
-            introBody:         'We Lived Here is an oral history research project on the memory, spatial history, and urban erasure of the Armenian community in Istanbul\'s Üsküdar district. The map documents the personal narratives and spatial experiences of local residents. Click on the markers to examine the testimonies, and use the filters to search by person and emotion.',
+            introHeading:      'We live here',
+            introBody:         'We live here is an oral history research project on the memory, spatial history, and urban erasure of the Armenian community in Istanbul\'s Üsküdar district. The map documents the personal narratives and spatial experiences of local residents. Click on the markers to examine the testimonies, and use the filters to search by person and emotion.',
             introEnter:        'Enter the map →',
             pageTitle:         'Üsküdar Testimony Map',
             videoPanelTitle:   'Oral history interview (recording)',
-            subtitle:          'Üsküdar Oral History Project',
+            subtitle:          'the remaining, the lost, the unknown',
             close:             'Close',
-            statsLabel:        'Visible stories',
+            statsLabel:        'Visible testimony',
             locationLabel:     'Location *',
             bulkCardNum:       n => `Story ${n}`,
             deleteConfirm:     'Are you sure you want to delete this testimony?',
@@ -1440,9 +679,11 @@
             emo_green:         'Belonging',
             emo_red:           'Anger',
             emo_black:         'Fear',
+            exportBtn:         'Export JSON',
+            mapLoadError:      'The map could not load. Check your connection and reload the page.',
         },
         hy: {
-            panelTitle:        'Հոս ապրեցանք',
+            panelTitle:        'Հոս կ՚ապրինք',
             peopleHeader:      'Մարդիկ',
             emotionsHeader:    'Զգացումներ',
             toggleNone:        'Մաքրել ընտրութիւնները',
@@ -1467,12 +708,13 @@
             latLabel:          'Լայնութիւն',
             lngLabel:          'Երկայնութիւն',
             ghostLabel:        'Այլեւս չկայ',
+            locationUnknownLabel: 'Անորոշ դիրք',
             emotionLabel:      'Զգացումներ',
             videoLabel:        'YouTube URL (ոչ պարտադիր)',
             bulkPersonLabel:   'Պատմող:',
             bulkPersonHint:    '← կը կիրարկուի բոլոր քարտերուն',
             errorRequired:     'Լրացուցէ՛ք պարտադիր դաշտերը եւ ընտրեցէ՛ք առնուազն մէկ զգացում։',
-            legendActive:      'Գոյութիւն ունեցող վայր',
+            legendActive:      'Գոյութիւն ունեցող',
             legendGhost:       'Այլեւս չկայ',
             legendUncertain:   'Անորոշ դիրք',
             narratorLabel:     n => `Պատմող ${n}`,
@@ -1483,14 +725,14 @@
             adminPass:         'Գաղտնաբառ',
             adminError:        'Սխալ մուտքանուն կամ գաղտնաբառ։',
             adminLoginBtn:     'Մուտք գործել',
-            introHeading:      'Հոս ապրեցանք',
-            introBody:         '«Հոս ապրեցանք»ը բանաւոր պատմութեան հետազօտական ծրագիր մըն է, որ կ՚ուսումնասիրէ Սթամպուլի Սկիւտար թաղամասի հայ համայնքի յիշողութիւնը, տարածական անցեալը եւ քաղաքային քանդումներու հետեւանքով կորսուած տարածքները։ Քարտէսը կը վաւերագրէ թաղեցիներու անձնական պատումները եւ տարածական փորձառութիւնները։ Կրնաք սեղմել նշաններուն վրայ՝ վկայութիւնները ուսումնասիրելու համար, եւ գործածել զտիչները՝ ըստ անձերու եւ զգացումներու որոնելու համար։',
+            introHeading:      'Հոս կ՚ապրինք',
+            introBody:         '«Հոս կ՚ապրինք»ը բանաւոր պատմութեան հետազօտական ծրագիր մըն է, որ կ՚ուսումնասիրէ Սթամպուլի Սկիւտար թաղամասի հայ համայնքի յիշողութիւնը, տարածական անցեալը եւ քաղաքային քանդումներու հետեւանքով կորսուած տարածքները։ Քարտէսը կը վաւերագրէ թաղեցիներու անձնական պատումները եւ տարածական փորձառութիւնները։ Կրնաք սեղմել նշաններուն վրայ՝ վկայութիւնները ուսումնասիրելու համար, եւ գործածել զտիչները՝ ըստ անձերու եւ զգացումներու որոնելու համար։',
             introEnter:        'Մտնել քարտէս →',
             pageTitle:         'Սկիւտարի Վկայութեանց Քարտէս',
             videoPanelTitle:   'Բանաւոր պատմութեան հարցազրոյց (տեսագրութիւն)',
-            subtitle:          'Սկիւտարի Բանաւոր Պատմութեան Ծրագիր',
+            subtitle:          'մնացողը, կորսուածը, անյայտը',
             close:             'Գոցել',
-            statsLabel:        'Երեւցող վկայութիւններ',
+            statsLabel:        'Երեւցող վկայութիւն',
             locationLabel:     'Վայր *',
             bulkCardNum:       n => `Վկայութիւն ${n}`,
             deleteConfirm:     'Վստա՞հ էք, թէ կը փափաքիք ջնջել այս վկայութիւնը։',
@@ -1507,6 +749,9 @@
             emo_green:         'Պատկանելիութիւն',
             emo_red:           'Բարկութիւն',
             emo_black:         'Վախ',
+            exportBtn:         'Արտահանել JSON',
+            // Western Armenian — drafted, not verified by a native speaker. Flagged in the report.
+            mapLoadError:      'Քարտէսը չկրցաւ բեռնուիլ։ Ստուգեցէ՛ք ձեր կապը եւ վերբեռնեցէ՛ք էջը։',
         },
     };
 
@@ -1525,9 +770,25 @@
         return /^\d+$/.test(person) ? t('narratorLabel')(person) : person;
     }
 
+    // Mapbox labels every marker that has a popup "Map marker" — the same
+    // English string eighteen times, in every language mode. Replace it with
+    // the story's own title and narrator, resolved the same way getPopupHTML
+    // resolves them.
+    function markerAriaLabel(story) {
+        const title = typeof story.title === 'object'
+            ? (story.title[currentLang] ?? story.title.tr)
+            : story.title;
+        return `${title} — ${displayPersonName(story.person)}`;
+    }
+
     function applyLang(lang) {
         currentLang = lang;
         localStorage.setItem('uskudar-lang', lang);
+
+        // 'hyw' is the IETF subtag for Western Armenian specifically — the
+        // Eastern variant differs, and a screen reader given plain 'tr' reads
+        // the Armenian interface with Turkish pronunciation rules.
+        document.documentElement.lang = lang === 'hy' ? 'hyw' : lang;
 
         document.title = t('pageTitle');
 
@@ -1561,6 +822,11 @@
         if (window._mapApi) {
             window._mapApi.buildPeopleFilter();
             window._mapApi.buildEmotionFilter();
+            // The active-filter summary ("Tüm kişiler · tüm duygular") is composed in
+            // JS rather than from a [data-i18n] attribute, so the attribute sweep above
+            // does not reach it. Without this it keeps whichever language it was last
+            // rendered in — it only ever refreshed on search/chip interaction.
+            window._mapApi.updateStats();
         }
         // renderStoryList is defined in admin functions — guard until available
         if (typeof renderStoryList === 'function') renderStoryList();
@@ -1572,6 +838,7 @@
                 if (marker) {
                     const popup = marker.getPopup();
                     if (popup) popup.setHTML(window._mapApi.getPopupHTML(story));
+                    marker.getElement().setAttribute('aria-label', markerAriaLabel(story));
                 }
             });
         }
@@ -1653,7 +920,12 @@
     
     const map = new mapboxgl.Map({
         container: 'map',
-        style: 'mapbox://styles/rudipyan/cmr9mbchq000m01qv1mf9gbmm',
+        // Basemap style. The Studio-hosted style below is the known-good default.
+        // A local copy exists at style/map.json (stripped to 8 layers, no labels) and
+        // style/map.original.json (untouched 50-layer download). To use the local
+        // stripped basemap, swap the line below for:  style: 'style/map.json',
+        // Verify markers still appear after switching -- see plan/ for the open issue.
+        style: 'style/map.json',
         center: [29.033029012546365, 41.028500902039596],
         zoom: 15,
         pitch: 0,
@@ -1703,6 +975,12 @@
                 updateMarkerVisibility();
                 updateStats();
             };
+
+            // Set the toggle label from current state, not from the markup default.
+            // applyLang's [data-i18n] sweep rewrites this button to 'toggleNone', which
+            // is wrong whenever nothing is selected — so re-derive it on every rebuild.
+            document.getElementById('peopleToggleAll').textContent =
+                activePeople.size === people.length ? t('toggleNone') : t('toggleAll');
         }
 
         function togglePerson(personName, btn) {
@@ -1778,6 +1056,11 @@
                 updateMarkerVisibility();
                 updateStats();
             };
+
+            // Same as buildPeopleFilter: derive the label from state so a language
+            // switch cannot leave it contradicting the selection.
+            document.getElementById('emotionToggleAll').textContent =
+                activeEmotions.size === Object.keys(emotionData).length ? t('toggleNone') : t('toggleAll');
         }
 
         function toggleEmotion(emotion, btn) {
@@ -1856,28 +1139,10 @@
             document.getElementById('storyCount').textContent = visibleCount;
         }
 
-        function updateStats() {
-            const personCount = activePeople.size;
-            const totalPeople = people.length;
-            const emotionCount = activeEmotions.size;
-            const totalEmotions = Object.keys(emotionData).length;
-
-            const parts = [];
-            if (personCount < totalPeople) {
-                parts.push(t('statsPeopleCount')(personCount, totalPeople));
-            } else {
-                parts.push(t('statsPeopleAll'));
-            }
-            if (emotionCount < totalEmotions) {
-                parts.push(t('statsEmotionsCount')(emotionCount, totalEmotions));
-            } else {
-                parts.push(t('statsEmotionsAll'));
-            }
-            if (searchQuery) {
-                parts.push(t('statsSearchActive')(searchQuery));
-            }
-            document.getElementById('activeFilters').textContent = parts.join(' · ');
-        }
+        // The active-filter summary ("all people · all emotions") was removed from the
+        // sidebar: with every chip selected by default it only ever restated what the
+        // chips already showed. The count above it carries the useful information.
+        function updateStats() { /* no-op — kept so existing call sites stay valid */ }
         
         // ========================================
         // ADD DRAGGABLE MARKERS
@@ -1904,12 +1169,19 @@
         }
         // pinVisible: legend mode — a ghost keeps its desaturated pulse but stays
         // permanently visible and skips the haunting scheduler and catch mechanic.
-        function buildParticleMarker(emotions, physicalSize, drifting, ghost, ghostAlreadyVisible, pinVisible) {
+        function buildParticleMarker(emotions, physicalSize, drifting, ghost, ghostAlreadyVisible, pinVisible, reuseLayout) {
             const SIZE = physicalSize || BASE_SIZE;
             const scale = SIZE / BASE_SIZE;
             const cx = SIZE / 2, cy = SIZE / 2;
             // Drifting markers use a wider, looser cluster to suggest uncertain location
-            const clusterR = (drifting ? 20 : 14) * scale;
+            // One cluster radius for every marker. Drifting markers used to spread to
+            // 20 instead of 14, which is 2.04x the area for the same 70 particles: the
+            // dots stopped overlapping and became individually countable, so Mikail's
+            // marker read as holding more testimony than its neighbours rather than
+            // less certainty about where it belongs. Uncertainty is carried by the
+            // drift motion instead — the same decision the marker key makes, where all
+            // three clouds are one size and only colour and movement differ.
+            const clusterR = 14 * scale;
             const repR     = 13 * scale;
             const N = 70;
             const n = emotions.length;
@@ -1925,22 +1197,34 @@
 
             const ctx = canvas.getContext('2d');
 
-            // Build particles — randomly mixed emotions across full cluster
-            const particles = Array.from({ length: N }, (_, i) => {
-                const emotion = emotions[i % n];
-                const angle  = Math.random() * Math.PI * 2;
-                const dist   = Math.sqrt(Math.random()) * clusterR;
-                const hx = cx + dist * Math.cos(angle);
-                const hy = cy + dist * Math.sin(angle);
+            // Particle layout is stored in SIZE-INDEPENDENT polar form and reused
+            // across zoom rebuilds. Regenerating the random positions each time made
+            // the whole cloud visibly re-scatter at every zoom step, which read as
+            // the map flickering. Reusing the layout means a rebuild only changes
+            // resolution — the cluster keeps its shape and identity.
+            const layout = reuseLayout || Array.from({ length: N }, (_, i) => ({
+                e:     i % n,
+                angle: Math.random() * Math.PI * 2,
+                distN: Math.sqrt(Math.random()),        // 0..1 of the cluster radius
+                rBase: 0.8 + Math.random() * 0.7,       // unscaled particle radius
+                phase: Math.random() * Math.PI * 2,
+            }));
+
+            const particles = layout.map(L => {
+                const emotion = emotions[L.e % n];
+                const dist = L.distN * clusterR;
+                const hx = cx + dist * Math.cos(L.angle);
+                const hy = cy + dist * Math.sin(L.angle);
                 return {
                     x: hx, y: hy, hx, hy,
                     vx: 0, vy: 0,
-                    r: (0.8 + Math.random() * 0.7) * scale,
+                    r: L.rBase * scale,
                     color: emotionData[emotion].hex,
                     ghostRgb: desaturate(emotionData[emotion].hex, 0.85),
-                    phase: Math.random() * Math.PI * 2,
+                    phase: L.phase,
                 };
             });
+            canvas._layout = layout;   // hand to the next rebuild
 
             let mouseX = -999, mouseY = -999;
             let hovering = false;
@@ -2035,6 +1319,10 @@
                 canvas._hovering = false;
                 mouseX = -999; mouseY = -999;
                 startAnim();
+                // Zoom rebuilds skip a hovered marker, leaving it CSS-scaled (and so
+                // slightly soft) at the wrong canvas size. Tell the map layer it can
+                // rebuild this one now. Bubbles so the listener can sit on the container.
+                canvas.dispatchEvent(new CustomEvent('marker:pointerout', { bubbles: true }));
             }
             canvas.addEventListener('mouseenter', (e) => pointerIn(e.clientX, e.clientY));
             canvas.addEventListener('mousemove', (e) => setPointer(e.clientX, e.clientY));
@@ -2084,6 +1372,35 @@
                     }, visibleMs);
                 }
 
+                // Seed each ghost at a random point in its own visible/hidden cycle.
+                // Previously every ghost started hidden and first appeared after only
+                // 1–6 s, while a full cycle runs 11–38 s — so on load they all surfaced
+                // together in the first few seconds and the haunting read as one
+                // synchronised blink. Starting mid-cycle means some ghosts are already
+                // present when the visitor arrives and others are not.
+                function startGhostAtRandomPhase() {
+                    const visibleMs = 6000 + bias * 14000 + Math.random() * 4000;
+                    const hiddenMs  = 5000 + (1 - bias) * 13000 + Math.random() * 4000;
+                    const offset    = markerPhase * (visibleMs + hiddenMs);
+
+                    if (offset < visibleMs) {
+                        // Arrived part-way through a visible stretch: already here.
+                        canvas.style.opacity = '1';
+                        canvas._ghostVisible = true;
+                        ghostTimerId = setTimeout(() => {
+                            if (caught) return;
+                            canvas.style.opacity = '0';
+                            canvas._ghostVisible = false;
+                            ghostTimerId = setTimeout(scheduleGhost, hiddenMs);
+                        }, visibleMs - offset);
+                    } else {
+                        // Arrived part-way through an absence: stay gone for the remainder.
+                        canvas.style.opacity = '0';
+                        canvas._ghostVisible = false;
+                        ghostTimerId = setTimeout(scheduleGhost, (visibleMs + hiddenMs) - offset);
+                    }
+                }
+
                 if (REDUCED_MOTION) {
                     // Reduced motion: no haunting cycle — the ghost stays visible,
                     // static and faint. Ghost-ness reads via desaturation alone.
@@ -2103,9 +1420,8 @@
                         // Zoom rebuild: already visible, just schedule the next hide
                         scheduleGhost();
                     } else {
-                        // First appearance: 1–6 s staggered so markers don't all pop at once
-                        const initialDelay = 1000 + markerPhase * 5000;
-                        ghostTimerId = setTimeout(scheduleGhost, initialDelay);
+                        // First load: start somewhere random inside the cycle, not all together
+                        startGhostAtRandomPhase();
                     }
                 }
 
@@ -2186,6 +1502,9 @@
             // Outer el: used by Mapbox for positioning (transform must not be overridden)
             const el = document.createElement('div');
             el.style.cursor = 'pointer';
+            // Set before setPopup(): Mapbox only writes its own "Map marker"
+            // label when the element has none.
+            el.setAttribute('aria-label', markerAriaLabel(story));
 
             // Inner wrapper: safe to apply scale without conflicting with Mapbox positioning
             const inner = document.createElement('div');
@@ -2245,6 +1564,13 @@
                 markerObjects[story.id]._driftRestart = () => {
                     if (!driftRafId) driftRafId = requestAnimationFrame(drift);
                 };
+                // After marker.remove() the detached element's display is still
+                // '', so the loop's own guard never fires and it keeps calling
+                // setLngLat on a removed marker every frame. destroyMarkerAnim
+                // calls this on every teardown path.
+                markerObjects[story.id]._driftStop = () => {
+                    if (driftRafId) { cancelAnimationFrame(driftRafId); driftRafId = null; }
+                };
                 driftRafId = requestAnimationFrame(drift);
             }
         }
@@ -2256,28 +1582,73 @@
         const SCALE_THRESHOLD = 16;  // zoom level below which markers stay at BASE_SIZE
         const SCALE_FACTOR    = 1.6; // growth multiplier per zoom step above threshold
         let lastRebuildZoom   = null;
+        let lastBuiltScale    = 1;    // the scale the current canvases were rendered at
+
+        // Scale for a given zoom. Markers hold BASE_SIZE below the threshold and
+        // grow geometrically above it.
+        function scaleForZoom(z) {
+            return z > SCALE_THRESHOLD ? Math.pow(SCALE_FACTOR, z - SCALE_THRESHOLD) : 1;
+        }
+
+        // Interim CSS scale, applied every frame of the gesture so the markers
+        // track the zoom immediately. This is cheap (one transform per marker,
+        // no allocation); the crisp 1:1 canvas rebuild follows at 'zoomend' and
+        // clears these transforms. Without this the markers visibly lag the map
+        // until the gesture settles.
+        // The built scale is tracked PER MARKER, not globally: a marker that was
+        // hovered during a rebuild keeps its old canvas, so it needs a different
+        // compensating transform from its neighbours. With a single global value
+        // the hovered marker got ratio 1 and froze at the wrong size.
+        function applyLiveScale() {
+            const target = scaleForZoom(map.getZoom());
+            stories.forEach(story => {
+                const inner = markerElements[story.id];
+                if (!inner) return;
+                const built = inner._builtScale || 1;
+                const ratio = target / built;
+                inner.style.transform = ratio === 1 ? '' : `scale(${ratio})`;
+            });
+        }
+        map.on('zoom', applyLiveScale);
+
         function updateMarkerScales() {
             const z = map.getZoom();
-            // Rebuild only when zoom crosses a 0.25-step boundary to avoid rebuilding every frame
-            const bucket = Math.round(z * 4) / 4;
-            if (bucket === lastRebuildZoom) return;
+            // Rebuild only when zoom crosses a 0.5-step boundary. Each crossing
+            // reallocates every marker canvas plus 70 particles per marker, so
+            // the bucket is deliberately coarse.
+            // Whole zoom levels only. A rebuild reallocates every canvas and its
+            // particles, so it is reserved for major zoom changes; the CSS transform
+            // covers everything in between (at most a 1.6^0.5 = 1.26x stretch, which
+            // is not visibly soft).
+            const bucket = Math.round(z);
+            if (bucket === lastRebuildZoom) {
+                applyLiveScale();   // keep the interim transform correct between buckets
+                return;
+            }
             lastRebuildZoom = bucket;
 
-            const cssScale = z > SCALE_THRESHOLD
-                ? Math.pow(SCALE_FACTOR, z - SCALE_THRESHOLD)
-                : 1;
+            const cssScale = scaleForZoom(bucket);
             const physicalSize = Math.round(BASE_SIZE * cssScale);
+            lastBuiltScale = cssScale;
 
             stories.forEach(story => {
                 const inner = markerElements[story.id];
                 if (!inner) return;
                 const oldCanvas = inner.querySelector('canvas');
                 if (!oldCanvas) return;
-                // Skip rebuild while user is hovering — avoids interrupting the animation
-                if (oldCanvas._hovering) return;
+                // Skip the rebuild while the pointer is on this marker — it would
+                // interrupt the repulsion animation mid-gesture. Its _builtScale is
+                // deliberately left untouched so applyLiveScale keeps compensating
+                // with a CSS transform, and rebuildMarkerScale() below restores the
+                // crisp 1:1 canvas as soon as the pointer leaves.
+                if (oldCanvas._hovering) { applyLiveScale(); return; }
+                // Canvas is about to be rebuilt at the correct physical size, so the
+                // interim CSS scale for this marker is no longer needed.
+                inner.style.transform = '';
+                inner._builtScale = cssScale;
                 // Rebuild canvas at new physical size — preserves sharpness.
                 // Pass ghost's current visible state so it doesn't restart from scratch.
-                const newCanvas = buildParticleMarker(story.emotions, physicalSize, story.locationKnown === false, !!story.isGhost, !!oldCanvas._ghostVisible);
+                const newCanvas = buildParticleMarker(story.emotions, physicalSize, story.locationKnown === false, !!story.isGhost, !!oldCanvas._ghostVisible, false, oldCanvas._layout);
                 // Stop rAF + ghost scheduler on the old canvas before detaching, otherwise
                 // every zoom-bucket change leaks an animation loop and a setTimeout chain
                 // that keeps mutating a detached node.
@@ -2285,23 +1656,109 @@
                 inner.replaceChild(newCanvas, oldCanvas);
             });
         }
-        map.on('zoom', updateMarkerScales);
+        // Rebuild any marker whose canvas is not at the current zoom's physical size.
+        // Fires when a hovered marker is released, since the zoom rebuild skipped it.
+        function rebuildStaleMarkerScales() {
+            // Compare against the bucketed scale, not the exact zoom: otherwise the
+            // marker is 'stale' at almost any zoom and every pointer-out triggers a
+            // rebuild, which is its own source of flicker.
+            const target = scaleForZoom(Math.round(map.getZoom()));
+            const physicalSize = Math.round(BASE_SIZE * target);
+            stories.forEach(story => {
+                const inner = markerElements[story.id];
+                if (!inner) return;
+                const oldCanvas = inner.querySelector('canvas');
+                if (!oldCanvas || oldCanvas._hovering) return;
+                if ((inner._builtScale || 1) === target) return;   // already correct
+                inner.style.transform = '';
+                inner._builtScale = target;
+                const newCanvas = buildParticleMarker(story.emotions, physicalSize, story.locationKnown === false, !!story.isGhost, !!oldCanvas._ghostVisible, false, oldCanvas._layout);
+                if (oldCanvas.destroyAnim) oldCanvas.destroyAnim();
+                inner.replaceChild(newCanvas, oldCanvas);
+            });
+        }
+        map.getContainer().addEventListener('marker:pointerout', rebuildStaleMarkerScales);
+
+        // 'zoomend', not 'zoom': the latter fires every animation frame of a
+        // pinch, so a single z15→z20 gesture crossed ~20 buckets and rebuilt
+        // every canvas at each one. Rebuilding once the gesture settles keeps
+        // the 1:1 pixel-density rebuild (see above) without the mid-pinch jank.
+        map.on('zoomend', updateMarkerScales);
 
         // Marker-state key: live mini markers that behave like the real ones —
         // the legend teaches by demonstrating, not by symbol.
         function buildMarkerKey() {
-            const KEY_SIZE = 24;
+            // The key teaches three STATES, not three emotions, so all three dots
+            // share one hue and differ only in saturation and motion. The previous
+            // version drew miniature particle clusters in different emotion colours,
+            // which at 24px read as three near-identical smudges — the colour
+            // difference implied the emotion mattered, and the state difference
+            // (the thing being taught) was the part you could not see.
+            // The key draws the REAL marker renderer with the REAL parameters, so it
+            // cannot drift out of step with the map. All six emotion hues appear in
+            // every row, which means the only things that vary are the two properties
+            // the map actually uses to express state:
+            //
+            //   saturation — full colour = still here, drained = gone
+            //   spread     — tight cluster (clusterR 14) = located,
+            //                wide cluster (clusterR 20) = location uncertain
+            //
+            // Both are visible in a still frame. That matters: this legend gets
+            // screenshotted into the thesis and slides, where animation is lost.
+            // Breathing and drift then reinforce the states rather than carrying them.
+            // SIX dots, not the map's 70. The full marker is a 70-particle cloud;
+            // shrunk into a sidebar cell it becomes an illegible smudge and all three
+            // rows look the same. Six dots — one per emotion — keep the cloud gesture
+            // while staying countable, which is what makes the states readable.
+            const CELL = 34, DOT = 5, RADIUS = 7;
+            // Evenly spaced angles with only slight radius variation, so the cloud
+            // reads as round. Uneven distances made it look like a triangle.
+            // Fixed rather than random, so the key is identical on every load and in
+            // every screenshot that ends up in the thesis.
+            const CLOUD = [[0, 0], [0, 0.95], [60, 0.86], [120, 0.98], [180, 0.84], [240, 0.94], [300, 0.88]];
+            const hues  = Object.keys(emotionData).map(k => emotionData[k].hex);
+            // Breathing offsets are deliberately SCRAMBLED, not sequential. Stagger
+            // dots in order around a ring and the eye reads the result as rotation —
+            // that is exactly how a loading spinner is built. Out-of-order offsets
+            // give the same shimmer with no direction to it, which is what the map
+            // gets for free by giving every particle a random phase.
+            const PHASE = [-1.4, -4.6, -0.3, -3.1, -2.2, -5.4, -1.9];
+
+            // All three clouds are the same size. The states are told by colour and
+            // by motion, not by spread — a bigger cloud just read as a different
+            // quantity of dots rather than a different kind of place.
             [
-                { id: 'key-present',   emotions: ['green', 'orange'], drifting: false, ghost: false },
-                { id: 'key-ghost',     emotions: ['purple', 'blue'],  drifting: false, ghost: true  },
-                { id: 'key-uncertain', emotions: ['black', 'purple'], drifting: true,  ghost: false },
-            ].forEach(({ id, emotions, drifting, ghost }) => {
+                // Full colour, still: the place is still there.
+                { id: 'key-present',   ghost: false },
+                // Drained + breathing: the place is gone.
+                { id: 'key-ghost',     ghost: true  },
+                // Drained + breathing + wandering: the location is unknown.
+                // Desaturated because the map's only uncertain story (18) is also a
+                // ghost, so this is what a visitor actually sees.
+                { id: 'key-uncertain', ghost: true  },
+            ].forEach(({ id, ghost }) => {
+                const radius = RADIUS;
                 const slot = document.getElementById(id);
                 if (!slot) return;
                 const old = slot.querySelector('canvas');
                 if (old?.destroyAnim) old.destroyAnim();
                 slot.innerHTML = '';
-                slot.appendChild(buildParticleMarker(emotions, KEY_SIZE, drifting, ghost, true, true));
+                CLOUD.forEach(([deg, distN], i) => {
+                    const a = deg * Math.PI / 180;
+                    const d = distN * radius;
+                    const dot = document.createElement('span');
+                    dot.className = ghost ? 'key-dot is-ghost' : 'key-dot';
+                    if (ghost) {
+                        const [r, g, b] = desaturate(hues[i % hues.length], 0.85);
+                        dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                        dot.style.animationDelay = `${PHASE[i]}s`;
+                    } else {
+                        dot.style.backgroundColor = hues[i % hues.length];
+                    }
+                    dot.style.left = (CELL / 2 + d * Math.cos(a) - DOT / 2) + 'px';
+                    dot.style.top  = (CELL / 2 + d * Math.sin(a) - DOT / 2) + 'px';
+                    slot.appendChild(dot);
+                });
             });
         }
 
@@ -2318,8 +1775,47 @@
         // Map legend removed — no longer needed
     });
     
+    // The whole interface is built inside map.on('load'). If the style request
+    // fails — revoked token, offline, captive-portal wifi — 'load' never fires
+    // and the visitor gets a blank rectangle with no explanation. Show a short
+    // failure message instead. Deliberately only a message: the map remains the
+    // only route to the testimonies, there is no fallback rendering of them.
+    let mapLoaded = false;
+    let mapErrorPending = false;
+    map.on('load', () => { mapLoaded = true; });
+
+    function showMapLoadError() {
+        // Only for a map that never loaded — not for transient tile errors
+        // after, nor for a single 404 that arrives while the style is still
+        // resolving. Re-check after a grace period before saying anything.
+        if (mapLoaded || mapErrorPending) return;
+        mapErrorPending = true;
+        setTimeout(() => {
+            if (mapLoaded) return;
+            renderMapLoadError();
+        }, 4000);
+    }
+
+    function renderMapLoadError() {
+        if (document.getElementById('map-load-error')) return;
+        const container = document.getElementById('map');
+        if (!container) return;
+        const box = document.createElement('div');
+        box.id = 'map-load-error';
+        box.setAttribute('role', 'alert');
+        box.setAttribute('data-i18n', 'mapLoadError');
+        box.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+            'max-width:min(32rem,80vw);padding:1.25rem 1.5rem;background:#fff;color:#5A554C;' +
+            'border:1px solid #d8d3c8;border-radius:8px;font-size:14px;line-height:1.5;' +
+            'text-align:center;z-index:5;';
+        box.textContent = t('mapLoadError');
+        container.appendChild(box);
+    }
+
     map.on('error', (e) => {
-        console.error('Mapbox error:', e.error.message);
+        // e.error is absent on some error events — reading .message threw here.
+        console.error('Mapbox error:', e?.error?.message ?? e);
+        showMapLoadError();
     });
 
     function toggleSidebar() {
@@ -2329,15 +1825,34 @@
         btn.classList.toggle('collapsed');
     }
 
+    // videoUrl is admin-authored, so the blast radius is small, but it reaches
+    // iframe.src unfiltered. Allow only http(s) YouTube embeds; fail safe.
+    function safeVideoUrl(url) {
+        try {
+            const parsed = new URL(url, location.href);
+            if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+            const host = parsed.hostname.replace(/^www\./, '');
+            const allowed = host === 'youtube.com' || host === 'youtube-nocookie.com' || host === 'youtu.be';
+            return allowed ? parsed.href : null;
+        } catch (err) {
+            return null;
+        }
+    }
+
     function openVideoPanel(url, title) {
+        const safeUrl = safeVideoUrl(url);
+        if (!safeUrl) {
+            console.warn('Refusing to embed non-YouTube video URL:', url);
+            return;
+        }
         const panel = document.getElementById('video-panel');
         const iframe = document.getElementById('video-panel-iframe');
         const titleEl = document.getElementById('video-panel-title');
         // Close all popups
         document.querySelectorAll('.mapboxgl-popup').forEach(p => p.remove());
         // Set video
-        iframe.src = url;
-        titleEl.textContent = title || 'Sözlü tarih görüşmesi (kayıt)';
+        iframe.src = safeUrl;
+        titleEl.textContent = title || t('videoPanelTitle');
         panel.classList.add('visible');
     }
 
@@ -2354,6 +1869,20 @@
 
     function saveStories() {
         localStorage.setItem('uskudar-stories', JSON.stringify(stories));
+    }
+
+    // localStorage is the only store — a testimony added in the field exists on
+    // that one phone and nowhere else. This is the way off the device.
+    function exportStoriesJson() {
+        const blob = new Blob([JSON.stringify(stories, null, 2)], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `uskudar-stories-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
     }
 
     function seedStoriesFromHardcoded() {
@@ -2542,6 +2071,7 @@
         document.getElementById('edit-lat').value       = story.lat;
         document.getElementById('edit-lng').value       = story.lng;
         document.getElementById('edit-ghost').checked   = !!story.isGhost;
+        document.getElementById('edit-location-unknown').checked = story.locationKnown === false;
         document.getElementById('edit-video').value     = story.videoUrl || '';
         document.getElementById('edit-error').style.display = 'none';
 
@@ -2580,6 +2110,7 @@
         const lat       = parseFloat(document.getElementById('edit-lat').value);
         const lng       = parseFloat(document.getElementById('edit-lng').value);
         const isGhost   = document.getElementById('edit-ghost').checked;
+        const locationKnown = !document.getElementById('edit-location-unknown').checked;
         const videoUrl  = document.getElementById('edit-video').value.trim();
         const emotions  = [...document.querySelectorAll('#edit-emotion-checkboxes input:checked')]
                             .map(i => i.value);
@@ -2597,7 +2128,7 @@
             person,
             title:     mergeLangField(stories[idx].title, title, editingLang),
             narrative: mergeLangField(stories[idx].narrative, narrative, editingLang),
-            period, lat, lng, isGhost, emotions, videoUrl,
+            period, lat, lng, isGhost, locationKnown, emotions, videoUrl,
         };
         saveStories();
 
@@ -2621,6 +2152,8 @@
     }
 
     function destroyMarkerAnim(id) {
+        const marker = markerObjects[id];
+        if (marker?._driftStop) marker._driftStop();
         const inner = markerElements[id];
         if (inner) {
             const canvas = inner.querySelector('canvas');
@@ -2694,6 +2227,11 @@
                 <label for="bc-ghost-${idx}" data-i18n="ghostLabel">Mevcut değil</label>
             </div>
 
+            <div class="inline-check">
+                <input type="checkbox" class="bc-location-unknown" id="bc-locunk-${idx}">
+                <label for="bc-locunk-${idx}" data-i18n="locationUnknownLabel">Konum belirsiz</label>
+            </div>
+
             <span class="modal-field-label" data-i18n="emotionLabel">Duygular *</span>
             <div class="emotion-check-grid bc-emotions">${emotionPills}</div>
 
@@ -2731,6 +2269,7 @@
             const narrative = card.querySelector('.bc-narrative').value.trim();
             const period    = card.querySelector('.bc-period').value.trim();
             const isGhost   = card.querySelector('.bc-ghost').checked;
+            const locationKnown = !card.querySelector('.bc-location-unknown').checked;
             const emotions  = [...card.querySelectorAll('.bc-emotions input:checked')].map(i => i.value);
             const errEl     = card.querySelector('.bc-error');
             const valid     = !!title && !isNaN(lat) && !isNaN(lng) && !!narrative && emotions.length > 0;
@@ -2739,7 +2278,15 @@
             return valid ? {
                 id: Date.now() + Math.random(),
                 person: person || 'Unknown',
-                title, lat, lng, narrative, period, isGhost, emotions
+                // Seed stories carry {tr,en,hy} objects; writing bare strings here
+                // left bulk-added stories with no slot a translation could ever be
+                // added to (mergeLangField can merge into an object but not create
+                // one). `tr` is written as well as the current slot because every
+                // read site falls back to `.tr` — without it a story added in EN
+                // would render blank in TR/HY and crash the search filter.
+                title:     { tr: title, [currentLang]: title },
+                narrative: { tr: narrative, [currentLang]: narrative },
+                lat, lng, period, isGhost, locationKnown, emotions
             } : null;
         }).filter(Boolean);
 
@@ -2839,6 +2386,19 @@
         // The Enter button is what actually dismisses into the map.
         document.getElementById('intro-enter').addEventListener('click', dismissIntro);
     })();
+
+    // Re-publish the functions referenced from inline on* attributes — the
+    // DOMContentLoaded wrapper (added so the Mapbox tag could be deferred)
+    // means they are no longer implicitly global.
+    Object.assign(window, {
+        applyLang,
+        toggleSidebar, closeVideoPanel,
+        closeAdminLogin, submitAdminLogin,
+        switchMgmtTab, renderStoryList, showListView, saveEditedStory,
+        openEditView, deleteStory, closeStoryManagement, exportStoriesJson,
+        addBulkCard, saveBulkStories, bcEmotionToggle, updateBulkSaveBtn,
+    });
+});
 </script>
 
 </body>

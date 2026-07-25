@@ -1,0 +1,28 @@
+MIT License — source code only. This licence covers the source code of the
+buradayaşadık prototype. It does NOT cover the oral-history testimony, narratives,
+titles, recordings or any other archival content carried by this repository; those
+are governed separately by DATA-LICENSE.md.
+
+Copyright (c) 2026 Rudi Sayat Pulatyan
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Third-party components are under their own terms: Mapbox GL JS v2.15.0
+(mapbox-gl.js, mapbox-gl.css) is Copyright (c) Mapbox and subject to the Mapbox
+Terms of Service; Noto Serif Armenian is under the SIL Open Font License.
