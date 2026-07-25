@@ -1706,37 +1706,34 @@ document.addEventListener('DOMContentLoaded', function () {
             // which at 24px read as three near-identical smudges — the colour
             // difference implied the emotion mattered, and the state difference
             // (the thing being taught) was the part you could not see.
-            // Every row shows the same six emotion hues, so the only thing that
-            // changes between rows is the state: full colour, drained, or drained
-            // and adrift. The ghost rows also breathe on the same 2.5 s cycle and
-            // 0.08–0.45 alpha range as the real ghost markers, so the key shows the
-            // behaviour rather than only describing it.
-            const hues = Object.keys(emotionData).map(k => emotionData[k].hex);
+            // The key draws the REAL marker renderer with the REAL parameters, so it
+            // cannot drift out of step with the map. All six emotion hues appear in
+            // every row, which means the only things that vary are the two properties
+            // the map actually uses to express state:
+            //
+            //   saturation — full colour = still here, drained = gone
+            //   spread     — tight cluster (clusterR 14) = located,
+            //                wide cluster (clusterR 20) = location uncertain
+            //
+            // Both are visible in a still frame. That matters: this legend gets
+            // screenshotted into the thesis and slides, where animation is lost.
+            // Breathing and drift then reinforce the states rather than carrying them.
+            const KEY_SIZE = 34;
+            const allHues  = Object.keys(emotionData);
             [
-                { id: 'key-present',   ghost: false },  // still here: full saturation, steady
-                { id: 'key-ghost',     ghost: true  },  // gone: drained, breathing
-                { id: 'key-uncertain', ghost: true  },  // unlocatable: drained, breathing, adrift
-            ].forEach(({ id, ghost }) => {
+                // id,               drifting, ghost
+                { id: 'key-present',   drifting: false, ghost: false },
+                { id: 'key-ghost',     drifting: false, ghost: true  },
+                { id: 'key-uncertain', drifting: true,  ghost: false },
+            ].forEach(({ id, drifting, ghost }) => {
                 const slot = document.getElementById(id);
                 if (!slot) return;
                 const old = slot.querySelector('canvas');
                 if (old?.destroyAnim) old.destroyAnim();
                 slot.innerHTML = '';
-                hues.forEach((hex, i) => {
-                    const dot = document.createElement('span');
-                    dot.className = ghost ? 'key-dot is-ghost' : 'key-dot';
-                    if (ghost) {
-                        const [r, g, b] = desaturate(hex, 0.85);
-                        dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-                        // Per-dot phase offset, mirroring the random phase each
-                        // particle gets on the map — so the cluster shimmers
-                        // rather than blinking in unison.
-                        dot.style.animationDelay = `${-(i * 0.42).toFixed(2)}s`;
-                    } else {
-                        dot.style.backgroundColor = hex;
-                    }
-                    slot.appendChild(dot);
-                });
+                // pinVisible = true: legend ghosts keep the desaturated breath but skip
+                // the haunting scheduler, so the row never blanks while being read.
+                slot.appendChild(buildParticleMarker(allHues, KEY_SIZE, drifting, ghost, true, true));
             });
         }
 
