@@ -658,17 +658,31 @@ body {
     align-items: center;
     justify-content: center;
 }
-/* One dot per state. The three rows share a hue and differ only in saturation
-   and motion, so the key reads as three states rather than three colours. */
+/* Each key row is a small cluster of the six emotion hues, so the only thing
+   that varies between rows is state: full colour, drained, or drained + adrift. */
+.marker-key-canvas {
+    flex-wrap: wrap;
+    gap: 2px;
+    width: 22px;
+}
 .key-dot {
-    width: 10px;
-    height: 10px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     display: block;
     flex-shrink: 0;
 }
-/* Uncertain-location key wobbles, echoing the drifting map markers */
-.marker-key-canvas.key-drift .key-dot {
+/* Ghost rows breathe on the same ~2.5s cycle and 0.08–0.45 alpha range as the
+   real ghost markers on the map. */
+.key-dot.is-ghost {
+    animation: key-breathe 2.5s ease-in-out infinite;
+}
+@keyframes key-breathe {
+    0%, 100% { opacity: 0.08; }
+    50%      { opacity: 0.45; }
+}
+/* Uncertain-location key also wobbles, echoing the drifting map markers */
+.marker-key-canvas.key-drift {
     animation: key-drift 4.5s ease-in-out infinite alternate;
 }
 @keyframes key-drift {
@@ -676,7 +690,9 @@ body {
     to   { transform: translate(3px, -2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-    .marker-key-canvas.key-drift .key-dot { animation: none; }
+    /* Match the map: autonomous motion stops, ghosts hold a static mid-pulse */
+    .marker-key-canvas.key-drift { animation: none; }
+    .key-dot.is-ghost { animation: none; opacity: 0.30; }
 }
 
 /* ── Entrance intro overlay ─────────────── */

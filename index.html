@@ -1687,23 +1687,37 @@ document.addEventListener('DOMContentLoaded', function () {
             // which at 24px read as three near-identical smudges — the colour
             // difference implied the emotion mattered, and the state difference
             // (the thing being taught) was the part you could not see.
-            const KEY_HUE  = emotionData.purple.hex;
-            const [r, g, b] = desaturate(KEY_HUE, 0.85);
-            const GHOST_HUE = `rgb(${r}, ${g}, ${b})`;
+            // Every row shows the same six emotion hues, so the only thing that
+            // changes between rows is the state: full colour, drained, or drained
+            // and adrift. The ghost rows also breathe on the same 2.5 s cycle and
+            // 0.08–0.45 alpha range as the real ghost markers, so the key shows the
+            // behaviour rather than only describing it.
+            const hues = Object.keys(emotionData).map(k => emotionData[k].hex);
             [
-                { id: 'key-present',   color: KEY_HUE   },  // still here: full saturation
-                { id: 'key-ghost',     color: GHOST_HUE },  // gone: drained of colour
-                { id: 'key-uncertain', color: GHOST_HUE },  // unlocatable: drained, and adrift
-            ].forEach(({ id, color }) => {
+                { id: 'key-present',   ghost: false },  // still here: full saturation, steady
+                { id: 'key-ghost',     ghost: true  },  // gone: drained, breathing
+                { id: 'key-uncertain', ghost: true  },  // unlocatable: drained, breathing, adrift
+            ].forEach(({ id, ghost }) => {
                 const slot = document.getElementById(id);
                 if (!slot) return;
                 const old = slot.querySelector('canvas');
                 if (old?.destroyAnim) old.destroyAnim();
                 slot.innerHTML = '';
-                const dot = document.createElement('span');
-                dot.className = 'key-dot';
-                dot.style.backgroundColor = color;
-                slot.appendChild(dot);
+                hues.forEach((hex, i) => {
+                    const dot = document.createElement('span');
+                    dot.className = ghost ? 'key-dot is-ghost' : 'key-dot';
+                    if (ghost) {
+                        const [r, g, b] = desaturate(hex, 0.85);
+                        dot.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                        // Per-dot phase offset, mirroring the random phase each
+                        // particle gets on the map — so the cluster shimmers
+                        // rather than blinking in unison.
+                        dot.style.animationDelay = `${-(i * 0.42).toFixed(2)}s`;
+                    } else {
+                        dot.style.backgroundColor = hex;
+                    }
+                    slot.appendChild(dot);
+                });
             });
         }
 
