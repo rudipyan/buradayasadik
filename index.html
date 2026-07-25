@@ -23,8 +23,8 @@
 <!-- Entrance intro overlay (shown once per device) -->
 <div id="intro-overlay" aria-hidden="true">
     <div id="intro-inner">
-        <h1 id="intro-heading" data-i18n="introHeading">Burada Yaşıyoruz</h1>
-        <p id="intro-body" data-i18n="introBody">Burada Yaşıyoruz, İstanbul'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.</p>
+        <h1 id="intro-heading" data-i18n="introHeading">Burada yaşıyoruz</h1>
+        <p id="intro-body" data-i18n="introBody">Burada yaşıyoruz, İstanbul'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.</p>
         <div id="intro-lang" role="group" aria-label="Language / Dil / Լեզու">
             <button type="button" class="intro-lang-btn" data-lang="tr">Türkçe</button>
             <button type="button" class="intro-lang-btn" data-lang="en">English</button>
@@ -91,7 +91,7 @@
         <!-- STATS -->
         <div class="stats">
             <span class="stats-count" id="storyCount">—</span>
-            <span class="stats-label" data-i18n="statsLabel">Görünen anı</span>
+            <span class="stats-label" data-i18n="statsLabel">Görünen tanıklık</span>
         </div>
 
         <!-- Marker-state key — live mini particle markers, filled in on map load -->
@@ -543,7 +543,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     const i18n = {
         tr: {
-            panelTitle:        'Burada Yaşıyoruz',
+            panelTitle:        'Burada yaşıyoruz',
             peopleHeader:      'Kişiler',
             emotionsHeader:    'Duygular',
             toggleNone:        'Seçimleri temizle',
@@ -585,14 +585,14 @@ document.addEventListener('DOMContentLoaded', function () {
             adminPass:         'Şifre',
             adminError:        'Kullanıcı adı veya şifre hatalı.',
             adminLoginBtn:     'Giriş',
-            introHeading:      'Burada Yaşıyoruz',
-            introBody:         'Burada Yaşıyoruz, İstanbul\'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.',
+            introHeading:      'Burada yaşıyoruz',
+            introBody:         'Burada yaşıyoruz, İstanbul\'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.',
             introEnter:        'Haritaya gir →',
             pageTitle:         'Üsküdar Tanıklık Haritası',
             videoPanelTitle:   'Sözlü tarih görüşmesi (kayıt)',
             subtitle:          'Kalan, kaybolan, bilinmeyen',
             close:             'Kapat',
-            statsLabel:        'Görünen anı',
+            statsLabel:        'Görünen tanıklık',
             locationLabel:     'Konum *',
             bulkCardNum:       n => `Tanıklık ${n}`,
             deleteConfirm:     'Bu tanıklığı silmek istediğinize emin misiniz?',
@@ -613,7 +613,7 @@ document.addEventListener('DOMContentLoaded', function () {
             mapLoadError:      'Harita yüklenemedi. Bağlantınızı denetleyip sayfayı yenileyin.',
         },
         en: {
-            panelTitle:        'We Live Here',
+            panelTitle:        'We live here',
             peopleHeader:      'People',
             emotionsHeader:    'Emotions',
             toggleNone:        'Deselect all',
@@ -655,14 +655,14 @@ document.addEventListener('DOMContentLoaded', function () {
             adminPass:         'Password',
             adminError:        'Incorrect username or password.',
             adminLoginBtn:     'Login',
-            introHeading:      'We Live Here',
-            introBody:         'We Live Here is an oral history research project on the memory, spatial history, and urban erasure of the Armenian community in Istanbul\'s Üsküdar district. The map documents the personal narratives and spatial experiences of local residents. Click on the markers to examine the testimonies, and use the filters to search by person and emotion.',
+            introHeading:      'We live here',
+            introBody:         'We live here is an oral history research project on the memory, spatial history, and urban erasure of the Armenian community in Istanbul\'s Üsküdar district. The map documents the personal narratives and spatial experiences of local residents. Click on the markers to examine the testimonies, and use the filters to search by person and emotion.',
             introEnter:        'Enter the map →',
             pageTitle:         'Üsküdar Testimony Map',
             videoPanelTitle:   'Oral history interview (recording)',
             subtitle:          'What remains, what is gone, what cannot be placed',
             close:             'Close',
-            statsLabel:        'Visible stories',
+            statsLabel:        'Visible testimony',
             locationLabel:     'Location *',
             bulkCardNum:       n => `Story ${n}`,
             deleteConfirm:     'Are you sure you want to delete this testimony?',
@@ -732,7 +732,7 @@ document.addEventListener('DOMContentLoaded', function () {
             videoPanelTitle:   'Բանաւոր պատմութեան հարցազրոյց (տեսագրութիւն)',
             subtitle:          'Մնացողը, կորսուածը, անյայտը',
             close:             'Գոցել',
-            statsLabel:        'Երեւցող վկայութիւններ',
+            statsLabel:        'Երեւցող վկայութիւն',
             locationLabel:     'Վայր *',
             bulkCardNum:       n => `Վկայութիւն ${n}`,
             deleteConfirm:     'Վստա՞հ էք, թէ կը փափաքիք ջնջել այս վկայութիւնը։',
