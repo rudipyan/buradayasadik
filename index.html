@@ -823,6 +823,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (window._mapApi) {
             window._mapApi.buildPeopleFilter();
             window._mapApi.buildEmotionFilter();
+            // The active-filter summary ("Tüm kişiler · tüm duygular") is composed in
+            // JS rather than from a [data-i18n] attribute, so the attribute sweep above
+            // does not reach it. Without this it keeps whichever language it was last
+            // rendered in — it only ever refreshed on search/chip interaction.
+            window._mapApi.updateStats();
         }
         // renderStoryList is defined in admin functions — guard until available
         if (typeof renderStoryList === 'function') renderStoryList();
@@ -971,6 +976,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateMarkerVisibility();
                 updateStats();
             };
+
+            // Set the toggle label from current state, not from the markup default.
+            // applyLang's [data-i18n] sweep rewrites this button to 'toggleNone', which
+            // is wrong whenever nothing is selected — so re-derive it on every rebuild.
+            document.getElementById('peopleToggleAll').textContent =
+                activePeople.size === people.length ? t('toggleNone') : t('toggleAll');
         }
 
         function togglePerson(personName, btn) {
@@ -1046,6 +1057,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateMarkerVisibility();
                 updateStats();
             };
+
+            // Same as buildPeopleFilter: derive the label from state so a language
+            // switch cannot leave it contradicting the selection.
+            document.getElementById('emotionToggleAll').textContent =
+                activeEmotions.size === Object.keys(emotionData).length ? t('toggleNone') : t('toggleAll');
         }
 
         function toggleEmotion(emotion, btn) {
