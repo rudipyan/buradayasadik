@@ -119,6 +119,41 @@ applies it. D only creates new files.
 
 ---
 
+## OPEN ISSUE — local basemap not wired in (2026-07-25)
+
+`style/map.json` (8 layers, stripped) and `style/map.original.json` (untouched 50-layer
+download) both exist. **Neither is wired into `index.html`** — the Studio-hosted style
+is still the default, because I could not verify the local style reliably.
+
+**Symptom.** With `style: 'style/map.json'`, `map.on('load')` did not fire in the
+automated browser: no markers, empty people/emotion filters, story count `—`. No
+console errors. `isStyleLoaded()` true, `areTilesLoaded()` true, sprite 200,
+glyphs 200 for all three fontstacks.
+
+**Why the diagnosis is not trustworthy.** A controlled trial run late in the session
+reported `load` never firing for *four* styles including the Studio-hosted one that
+demonstrably works in a normal window. The automated tab appears to throttle
+rendering, and Mapbox fires `load` on first render. So the earlier bisect
+(“any symbol layer stalls it; zero symbol layers works”) rests on single
+observations taken through a measurement that is now known to be unreliable.
+Do not treat it as established.
+
+**What is actually known:**
+- The hosted Studio style works. This is the committed default.
+- `index.html` is byte-identical to the pre-test snapshot apart from the style line.
+- Nothing about the local style files is known to be malformed: valid JSON,
+  `sources`/`glyphs`/`sprite` unchanged from the original, no dangling source refs.
+
+**Next step.** Open the prototype in a normal Chrome window, swap the style line to
+`style: 'style/map.json'`, hard-reload, and see whether the 18 markers appear.
+That single manual check settles it. If markers appear, the local stripped basemap
+is fine and the automation was the problem. If they do not, bisect by re-adding
+`settlement-subdivision-label` from `map.original.json`.
+
+Also unverified for the same reason: the marker `aria-label` work (task 7). One probe
+showed the Mapbox default `"Map marker"` still in place, but that probe may have run
+before `addMarkerForStory` executed. Re-check in a normal window.
+
 ## Verification
 
 The site must load and function after **every** tier. Checks at 3.2:
