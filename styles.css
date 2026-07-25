@@ -1,4 +1,4 @@
-/* buradayaşadık — application styles
+/* buradayaşıyoruz — application styles
    Extracted from index.html <style> block (was lines 12-787) on 2026-07-25.
    Mapbox styles remain in mapbox-gl.css, loaded before this file. */
 
@@ -187,7 +187,6 @@ body {
 .filter-section h3 {
     font-size: 13px;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.6px;
     color: #5A554C;
 }
@@ -323,7 +322,6 @@ body {
 }
 .stats-label {
     font-size: 13px;
-    text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #5A554C;
     display: block;
@@ -446,7 +444,6 @@ body {
     display: block;
     font-size: 13px;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #5A554C;
     margin: 14px 0 4px 0;
@@ -626,7 +623,7 @@ body {
 .bulk-person-row { display: flex; align-items: center; gap: 8px; background: #fffbf0; border: 1px solid #ffe4a0; border-radius: 7px; padding: 8px 10px; margin-bottom: 10px; }
 .bulk-person-hint { font-size: 9px; color: #5A554C; white-space: nowrap; }
 .bulk-card { border: 1px solid #e8e8e8; border-radius: 7px; padding: 10px; background: #fff; margin-bottom: 8px; position: relative; }
-.bulk-card-num { font-size: 9px; font-weight: 700; color: #5A554C; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.bulk-card-num { font-size: 9px; font-weight: 700; color: #5A554C; letter-spacing: 0.5px; margin-bottom: 6px; }
 .bulk-remove-btn { position: absolute; top: 8px; right: 8px; background: none; border: none; color: #ddd; font-size: 14px; cursor: pointer; line-height: 1; }
 .bulk-remove-btn:hover { color: #e74c3c; }
 .bulk-add-card-btn { width: 100%; border: 1.5px dashed #ddd; border-radius: 7px; padding: 8px; background: #fafafa; color: #5A554C; font-size: 13px; cursor: pointer; margin-bottom: 8px; }

@@ -23,8 +23,8 @@
 <!-- Entrance intro overlay (shown once per device) -->
 <div id="intro-overlay" aria-hidden="true">
     <div id="intro-inner">
-        <h1 id="intro-heading" data-i18n="introHeading">Burada Yaşadık</h1>
-        <p id="intro-body" data-i18n="introBody">Burada Yaşadık, İstanbul'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.</p>
+        <h1 id="intro-heading" data-i18n="introHeading">Burada Yaşıyoruz</h1>
+        <p id="intro-body" data-i18n="introBody">Burada Yaşıyoruz, İstanbul'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.</p>
         <div id="intro-lang" role="group" aria-label="Language / Dil / Լեզու">
             <button type="button" class="intro-lang-btn" data-lang="tr">Türkçe</button>
             <button type="button" class="intro-lang-btn" data-lang="en">English</button>
@@ -52,7 +52,7 @@
         <div class="sidebar-top-row">
             <div>
                 <h1 data-i18n="panelTitle">Üsküdar Tanıklık Haritası</h1>
-                <p class="subtitle" data-i18n="subtitle">Üsküdar Sözlü Tarih Projesi</p>
+                <p class="subtitle" data-i18n="subtitle">Kalan, kaybolan, bilinmeyen</p>
             </div>
             <button id="sidebar-close" onclick="toggleSidebar()" data-i18n-title="close" title="Kapat">✕</button>
         </div>
@@ -91,8 +91,7 @@
         <!-- STATS -->
         <div class="stats">
             <span class="stats-count" id="storyCount">—</span>
-            <span class="stats-label" data-i18n="statsLabel">Görünen Anı</span>
-            <div class="stats-detail" id="activeFilters"></div>
+            <span class="stats-label" data-i18n="statsLabel">Görünen anı</span>
         </div>
 
         <!-- Marker-state key — live mini particle markers, filled in on map load -->
@@ -117,7 +116,7 @@
 <div class="modal-overlay" id="admin-login-overlay">
     <div class="modal-box">
         <h2 data-i18n="adminLoginTitle">Yönetici Girişi</h2>
-        <span class="modal-field-label" data-i18n="adminUser">Kullanıcı Adı</span>
+        <span class="modal-field-label" data-i18n="adminUser">Kullanıcı adı</span>
         <input type="text" id="admin-username" autocomplete="off" placeholder="admin">
         <span class="modal-field-label" data-i18n="adminPass">Şifre</span>
         <input type="password" id="admin-password" placeholder="••••••••">
@@ -140,7 +139,7 @@
             <button class="mgmt-tab active" id="tab-stories" onclick="switchMgmtTab('stories')"
                 data-i18n="tabStories">Tanıklıklar</button>
             <button class="mgmt-tab" id="tab-bulk" onclick="switchMgmtTab('bulk')"
-                data-i18n="tabBulk">Toplu Ekle</button>
+                data-i18n="tabBulk">Toplu ekle</button>
         </div>
 
         <!-- ── TAB 1: Stories list + edit ── -->
@@ -209,7 +208,7 @@
                     <button class="btn-secondary" onclick="showListView()"
                         data-i18n="cancelBtn">İptal</button>
                     <button class="btn-primary" onclick="saveEditedStory()"
-                        data-i18n="saveBtn">Değişiklikleri Kaydet</button>
+                        data-i18n="saveBtn">Değişiklikleri kaydet</button>
                 </div>
             </div>
         </div>
@@ -225,7 +224,7 @@
             <button class="bulk-add-card-btn" onclick="addBulkCard()"
                 data-i18n="addCardBtn">+ Tanıklık ekle</button>
             <button class="btn-primary bulk-save-btn" id="bulk-save-btn"
-                onclick="saveBulkStories()">Tümünü Kaydet</button>
+                onclick="saveBulkStories()">Tümünü kaydet</button>
         </div>
 
         <div class="modal-actions" style="margin-top:12px;border-top:1px solid #f0f0f0;padding-top:12px">
@@ -544,7 +543,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     const i18n = {
         tr: {
-            panelTitle:        'Burada Yaşadık',
+            panelTitle:        'Burada Yaşıyoruz',
             peopleHeader:      'Kişiler',
             emotionsHeader:    'Duygular',
             toggleNone:        'Seçimleri temizle',
@@ -554,12 +553,12 @@ document.addEventListener('DOMContentLoaded', function () {
             editBtn:           'Düzenle',
             deleteBtn:         'Sil',
             backBtn:           '← Listeye dön',
-            saveBtn:           'Değişiklikleri Kaydet',
+            saveBtn:           'Değişiklikleri kaydet',
             cancelBtn:         'İptal',
             addCardBtn:        '+ Tanıklık ekle',
-            saveAllBtn:        n => `Tümünü Kaydet (${n} tanıklık)`,
+            saveAllBtn:        n => `Tümünü kaydet (${n} tanıklık)`,
             tabStories:        'Tanıklıklar',
-            tabBulk:           'Toplu Ekle',
+            tabBulk:           'Toplu ekle',
             modalTitle:        'Tanıklık Yönetimi',
             personLabel:       'Kişi',
             titleLabel:        'Başlık',
@@ -579,21 +578,21 @@ document.addEventListener('DOMContentLoaded', function () {
             legendGhost:       'Artık mevcut değil',
             legendUncertain:   'Konum belirsiz',
             narratorLabel:     n => `Anlatıcı ${n}`,
-            watchBtn:          '▶ Tanıklığı İzle',
+            watchBtn:          '▶ Tanıklığı izle',
             popupPeriod:       'Dönem',
             adminLoginTitle:   'Yönetici Girişi',
-            adminUser:         'Kullanıcı Adı',
+            adminUser:         'Kullanıcı adı',
             adminPass:         'Şifre',
             adminError:        'Kullanıcı adı veya şifre hatalı.',
             adminLoginBtn:     'Giriş',
-            introHeading:      'Burada Yaşadık',
-            introBody:         'Burada Yaşadık, İstanbul\'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.',
+            introHeading:      'Burada Yaşıyoruz',
+            introBody:         'Burada Yaşıyoruz, İstanbul\'un Üsküdar ilçesindeki Ermeni toplumunun hafızasını, mekânsal geçmişini ve yıkım süreçleriyle yok olan kentsel alanlarını inceleyen bir sözlü tarih araştırmasıdır. Harita, semt sakinlerinin kentsel hafızaya dair kişisel anlatılarını ve mekân deneyimlerini belgeler. Simgelere tıklayarak tanıklıkları inceleyebilir, filtreleri kullanarak kişi ve duygulara göre arama yapabilirsiniz.',
             introEnter:        'Haritaya gir →',
             pageTitle:         'Üsküdar Tanıklık Haritası',
             videoPanelTitle:   'Sözlü tarih görüşmesi (kayıt)',
-            subtitle:          'Üsküdar Sözlü Tarih Projesi',
+            subtitle:          'Kalan, kaybolan, bilinmeyen',
             close:             'Kapat',
-            statsLabel:        'Görünen Anı',
+            statsLabel:        'Görünen anı',
             locationLabel:     'Konum *',
             bulkCardNum:       n => `Tanıklık ${n}`,
             deleteConfirm:     'Bu tanıklığı silmek istediğinize emin misiniz?',
@@ -614,7 +613,7 @@ document.addEventListener('DOMContentLoaded', function () {
             mapLoadError:      'Harita yüklenemedi. Bağlantınızı denetleyip sayfayı yenileyin.',
         },
         en: {
-            panelTitle:        'We Lived Here',
+            panelTitle:        'We Live Here',
             peopleHeader:      'People',
             emotionsHeader:    'Emotions',
             toggleNone:        'Deselect all',
@@ -624,12 +623,12 @@ document.addEventListener('DOMContentLoaded', function () {
             editBtn:           'Edit',
             deleteBtn:         'Delete',
             backBtn:           '← Back to list',
-            saveBtn:           'Save Changes',
+            saveBtn:           'Save changes',
             cancelBtn:         'Cancel',
             addCardBtn:        '+ Add story',
-            saveAllBtn:        n => `Save All (${n} stories)`,
+            saveAllBtn:        n => `Save all (${n} stories)`,
             tabStories:        'Stories',
-            tabBulk:           'Bulk Add',
+            tabBulk:           'Bulk add',
             modalTitle:        'Story Management',
             personLabel:       'Person',
             titleLabel:        'Title',
@@ -656,12 +655,12 @@ document.addEventListener('DOMContentLoaded', function () {
             adminPass:         'Password',
             adminError:        'Incorrect username or password.',
             adminLoginBtn:     'Login',
-            introHeading:      'We Lived Here',
-            introBody:         'We Lived Here is an oral history research project on the memory, spatial history, and urban erasure of the Armenian community in Istanbul\'s Üsküdar district. The map documents the personal narratives and spatial experiences of local residents. Click on the markers to examine the testimonies, and use the filters to search by person and emotion.',
+            introHeading:      'We Live Here',
+            introBody:         'We Live Here is an oral history research project on the memory, spatial history, and urban erasure of the Armenian community in Istanbul\'s Üsküdar district. The map documents the personal narratives and spatial experiences of local residents. Click on the markers to examine the testimonies, and use the filters to search by person and emotion.',
             introEnter:        'Enter the map →',
             pageTitle:         'Üsküdar Testimony Map',
             videoPanelTitle:   'Oral history interview (recording)',
-            subtitle:          'Üsküdar Oral History Project',
+            subtitle:          'What remains, what is gone, what cannot be placed',
             close:             'Close',
             statsLabel:        'Visible stories',
             locationLabel:     'Location *',
@@ -684,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function () {
             mapLoadError:      'The map could not load. Check your connection and reload the page.',
         },
         hy: {
-            panelTitle:        'Հոս ապրեցանք',
+            panelTitle:        'Հոս կ՚ապրինք',
             peopleHeader:      'Մարդիկ',
             emotionsHeader:    'Զգացումներ',
             toggleNone:        'Մաքրել ընտրութիւնները',
@@ -726,12 +725,12 @@ document.addEventListener('DOMContentLoaded', function () {
             adminPass:         'Գաղտնաբառ',
             adminError:        'Սխալ մուտքանուն կամ գաղտնաբառ։',
             adminLoginBtn:     'Մուտք գործել',
-            introHeading:      'Հոս ապրեցանք',
-            introBody:         '«Հոս ապրեցանք»ը բանաւոր պատմութեան հետազօտական ծրագիր մըն է, որ կ՚ուսումնասիրէ Սթամպուլի Սկիւտար թաղամասի հայ համայնքի յիշողութիւնը, տարածական անցեալը եւ քաղաքային քանդումներու հետեւանքով կորսուած տարածքները։ Քարտէսը կը վաւերագրէ թաղեցիներու անձնական պատումները եւ տարածական փորձառութիւնները։ Կրնաք սեղմել նշաններուն վրայ՝ վկայութիւնները ուսումնասիրելու համար, եւ գործածել զտիչները՝ ըստ անձերու եւ զգացումներու որոնելու համար։',
+            introHeading:      'Հոս կ՚ապրինք',
+            introBody:         '«Հոս կ՚ապրինք»ը բանաւոր պատմութեան հետազօտական ծրագիր մըն է, որ կ՚ուսումնասիրէ Սթամպուլի Սկիւտար թաղամասի հայ համայնքի յիշողութիւնը, տարածական անցեալը եւ քաղաքային քանդումներու հետեւանքով կորսուած տարածքները։ Քարտէսը կը վաւերագրէ թաղեցիներու անձնական պատումները եւ տարածական փորձառութիւնները։ Կրնաք սեղմել նշաններուն վրայ՝ վկայութիւնները ուսումնասիրելու համար, եւ գործածել զտիչները՝ ըստ անձերու եւ զգացումներու որոնելու համար։',
             introEnter:        'Մտնել քարտէս →',
             pageTitle:         'Սկիւտարի Վկայութեանց Քարտէս',
             videoPanelTitle:   'Բանաւոր պատմութեան հարցազրոյց (տեսագրութիւն)',
-            subtitle:          'Սկիւտարի Բանաւոր Պատմութեան Ծրագիր',
+            subtitle:          'Մնացողը, կորսուածը, անծանօթը',
             close:             'Գոցել',
             statsLabel:        'Երեւցող վկայութիւններ',
             locationLabel:     'Վայր *',
@@ -1140,28 +1139,10 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('storyCount').textContent = visibleCount;
         }
 
-        function updateStats() {
-            const personCount = activePeople.size;
-            const totalPeople = people.length;
-            const emotionCount = activeEmotions.size;
-            const totalEmotions = Object.keys(emotionData).length;
-
-            const parts = [];
-            if (personCount < totalPeople) {
-                parts.push(t('statsPeopleCount')(personCount, totalPeople));
-            } else {
-                parts.push(t('statsPeopleAll'));
-            }
-            if (emotionCount < totalEmotions) {
-                parts.push(t('statsEmotionsCount')(emotionCount, totalEmotions));
-            } else {
-                parts.push(t('statsEmotionsAll'));
-            }
-            if (searchQuery) {
-                parts.push(t('statsSearchActive')(searchQuery));
-            }
-            document.getElementById('activeFilters').textContent = parts.join(' · ');
-        }
+        // The active-filter summary ("all people · all emotions") was removed from the
+        // sidebar: with every chip selected by default it only ever restated what the
+        // chips already showed. The count above it carries the useful information.
+        function updateStats() { /* no-op — kept so existing call sites stay valid */ }
         
         // ========================================
         // ADD DRAGGABLE MARKERS

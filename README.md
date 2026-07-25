@@ -1,4 +1,4 @@
-# buradayaşadık
+# buradayaşıyoruz
 
 A counter-map of Armenian memory in Üsküdar, Istanbul: a browser prototype placing testimonies about lost and surviving places on a map, and letting some of those places refuse to stay put. Counter-map here means the map is built to argue with the official record rather than reproduce it, so it withholds the usual cartographic instruments (no zoom buttons, compass or scale bar) and gives absence and uncertainty their own visual states. It is a working prototype used in conversation about the project, not a finished thesis artifact.
 
