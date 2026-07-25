@@ -1,2 +1,9 @@
 .superpowers/
 .claude/
+.DS_Store
+
+# Iteration snapshots live as git tags, not as folders on disk:
+#   git show iteration-12-may:index.html
+#   git show iteration-9-june:index.html
+12 May/
+9 June/

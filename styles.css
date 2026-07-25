@@ -1,0 +1,780 @@
+/* buradayaşadık — application styles
+   Extracted from index.html <style> block (was lines 12-787) on 2026-07-25.
+   Mapbox styles remain in mapbox-gl.css, loaded before this file. */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Western Armenian is set in a typeface designed for Armenian (self-hosted,
+   works offline like the vendored mapbox-gl). unicode-range scopes it to
+   Armenian glyphs only, so Latin text keeps the existing type — the two
+   scripts coexist rather than Armenian falling back to a system afterthought. */
+@font-face {
+    font-family: 'Noto Serif Armenian';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('fonts/NotoSerifArmenian-wght400-700.woff2') format('woff2');
+    unicode-range: U+0308, U+0530-058F, U+2010, U+2024, U+25CC, U+FB13-FB17;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family: 'Noto Serif Armenian', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    color: #333;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+/* ── Sidebar ─────────────────────────────────── */
+.controls {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+    z-index: 100;
+    width: 288px;
+    font-size: 13px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.28s ease;
+    scrollbar-width: thin;
+    scrollbar-color: #ddd transparent;
+}
+.controls::-webkit-scrollbar { width: 4px; }
+.controls::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+.controls.hidden {
+    transform: translateX(calc(-100% - 30px));
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Sidebar header */
+.sidebar-header {
+    padding: 16px 16px 0 16px;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.sidebar-top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.controls h1 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    line-height: 1.3;
+    flex: 1;
+    padding-right: 8px;
+}
+
+.controls .subtitle {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 3px;
+    font-style: italic;
+}
+
+#sidebar-close {
+    background: none;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #aaa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+#sidebar-close:hover { background: #f3f3f3; color: #444; }
+
+/* Search bar */
+.search-wrap {
+    padding: 10px 16px 0 16px;
+}
+.search-input {
+    width: 100%;
+    padding: 7px 10px 7px 32px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #333;
+    background: #fafafa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+}
+.search-input:focus {
+    border-color: #bbb;
+    background-color: #fff;
+}
+.search-input::placeholder { color: #bbb; }
+
+/* Sidebar body */
+.sidebar-body {
+    padding: 12px 16px 16px 16px;
+}
+
+/* Sidebar toggle button (when closed) */
+#sidebar-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 101;
+    background: white;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.06);
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: #555;
+    transition: background 0.15s;
+}
+#sidebar-toggle.collapsed { display: flex; }
+#sidebar-toggle:hover { background: #f5f5f5; }
+
+/* ── Filter sections ──────────────────────────── */
+.filter-section {
+    margin-bottom: 16px;
+}
+
+.filter-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.filter-section h3 {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #888;
+}
+
+.toggle-all-link {
+    font-size: 11px;
+    color: #aaa;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s;
+}
+.toggle-all-link:hover { color: #555; }
+
+/* People chips */
+.chips-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: 0 0 auto;
+    width: fit-content;
+    white-space: nowrap;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1.5px solid #e5e5e5;
+    background: #fff;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    user-select: none;
+}
+.chip:hover {
+    border-color: #ccc;
+    background: #f9f9f9;
+}
+.chip.active {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+}
+.chip.active:hover {
+    background: #333;
+    border-color: #333;
+}
+
+/* Dot inside chip (for person avatar) */
+.chip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+/* Emotion chips — pill with color swatch */
+.emotion-chips-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 6px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.emotion-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 20px;
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
+    border: 1.5px solid #e5e5e5;
+    background: #fff;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, opacity 0.15s;
+    user-select: none;
+}
+.emotion-chip:hover {
+    border-color: #ccc;
+    background: #f9f9f9;
+}
+.emotion-chip .swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+}
+.emotion-chip.active {
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+}
+.emotion-chip:not(.active) .swatch {
+    opacity: 0.5;
+}
+.emotion-chip:not(.active) {
+    color: #888;
+}
+
+/* Divider */
+.sidebar-divider {
+    height: 1px;
+    background: #f0f0f0;
+    margin: 12px 0;
+}
+
+/* Stats */
+.stats {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    color: #888;
+    line-height: 1.7;
+}
+.stats-count {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    display: block;
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+.stats-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #bbb;
+    display: block;
+    margin-bottom: 8px;
+}
+.stats-detail {
+    font-size: 11px;
+    color: #aaa;
+    line-height: 1.6;
+}
+
+/* "No results" notice inside sidebar */
+.no-results {
+    font-size: 11px;
+    color: #bbb;
+    text-align: center;
+    padding: 8px 0;
+    display: none;
+}
+
+/* ── Mapbox popup ────────────────────────────── */
+.mapboxgl-popup-content {
+    font-family: 'Noto Serif Armenian', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 14px 16px !important;
+    border-radius: 10px !important;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+}
+
+.mapboxgl-popup-content h3 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.mapboxgl-popup-content p {
+    margin: 0 0 0.75rem 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #555;
+}
+
+.mapboxgl-popup-content .person-name {
+    color: #aaa;
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.video-player {
+    margin: 1rem 0 0 0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.video-player iframe {
+    width: 100%;
+    height: 200px;
+    border: none;
+}
+
+/* ── Floating video panel ────────────────────── */
+#video-panel {
+    display: none;
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 480px;
+    background: #111;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    z-index: 9999;
+}
+#video-panel.visible { display: block; }
+#video-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #1a1a1a;
+}
+#video-panel-title {
+    font-size: 12px;
+    color: #ccc;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#video-panel-close {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 0 0 12px;
+    flex-shrink: 0;
+}
+#video-panel-close:hover { color: #fff; }
+#video-panel iframe {
+    display: block;
+    width: 100%;
+    height: 270px;
+    border: none;
+}
+
+/* ── Admin panel ─────────────────────────────── */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 9998;
+    align-items: center;
+    justify-content: center;
+}
+.modal-overlay.visible { display: flex; }
+
+.modal-box {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+    padding: 24px;
+    width: 440px;
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+}
+.modal-box h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 16px 0;
+}
+.modal-field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    margin: 14px 0 4px 0;
+}
+.modal-box input[type="text"],
+.modal-box input[type="password"],
+.modal-box input[type="number"],
+.modal-box textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #333;
+    outline: none;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.modal-box input:focus, .modal-box textarea:focus { border-color: #bbb; }
+.modal-box textarea { min-height: 80px; resize: vertical; }
+.modal-error {
+    font-size: 12px;
+    color: #e74c3c;
+    margin-top: 8px;
+    display: none;
+}
+.modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+.btn-primary {
+    padding: 8px 18px;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.btn-primary:hover { background: #333; }
+.btn-secondary {
+    padding: 8px 14px;
+    background: #f5f5f5;
+    color: #555;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.btn-secondary:hover { background: #eee; }
+.emotion-check-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+.emotion-check-grid label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1.5px solid #e5e5e5;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    user-select: none;
+}
+.emotion-check-grid input[type="checkbox"] { display: none; }
+.emotion-check-grid label.checked { color: #fff; border-color: transparent; }
+.coord-row { display: flex; gap: 8px; }
+.coord-row > div { flex: 1; }
+.inline-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #555;
+    margin-top: 6px;
+}
+.inline-check input { width: auto; }
+
+/* ── Play video button inside popup ─────────── */
+.play-video-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 6px 14px;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.play-video-btn:hover { background: #444; }
+
+/* ── Language switcher ───────────────────────
+   All three languages stay visible at all times — the co-presence of
+   the three scripts (incl. Western Armenian) is part of the content. */
+#lang-switcher {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 20px;
+    padding: 4px 8px;
+    gap: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+.lang-option {
+    font-size: 11px;
+    font-weight: 700;
+    color: #aaa;
+    padding: 2px 6px;
+    border-radius: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    border: none;
+    background: none;
+    transition: color 0.15s, background 0.15s;
+}
+.lang-option.active {
+    color: #1a1a1a;
+    background: #f0f0f0;
+}
+.lang-option:hover {
+    color: #1a1a1a;
+}
+
+/* ── Story management modal ─────────────── */
+.mgmt-tabs {
+    display: flex;
+    border-bottom: 1.5px solid #f0f0f0;
+    margin-bottom: 12px;
+}
+.mgmt-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: #aaa;
+    cursor: pointer;
+    margin-bottom: -2px;
+    font-weight: 500;
+}
+.mgmt-tab.active { color: #1a1a1a; font-weight: 700; border-bottom-color: #1a1a1a; }
+.mgmt-search-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.mgmt-search-row input { flex: 1; }
+.mgmt-story-list { border: 1px solid #eee; border-radius: 7px; overflow: hidden; max-height: 260px; overflow-y: auto; }
+.mgmt-story-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #f5f5f5; font-size: 11px; }
+.mgmt-story-row:last-child { border-bottom: none; }
+.mgmt-story-info { flex: 1; min-width: 0; }
+.mgmt-story-info strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mgmt-story-info span { font-size: 10px; color: #bbb; }
+.mgmt-story-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.mgmt-btn-edit { background: #f4f4f4; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer; }
+.mgmt-btn-del  { background: #fff0f0; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; color: #e74c3c; cursor: pointer; }
+.mgmt-count { font-size: 10px; color: #bbb; margin-top: 5px; }
+.mgmt-back-btn { background: none; border: none; font-size: 11px; color: #888; cursor: pointer; padding: 0; margin-bottom: 10px; }
+.mgmt-back-btn:hover { color: #1a1a1a; }
+/* Bulk add */
+.bulk-person-row { display: flex; align-items: center; gap: 8px; background: #fffbf0; border: 1px solid #ffe4a0; border-radius: 7px; padding: 8px 10px; margin-bottom: 10px; }
+.bulk-person-hint { font-size: 9px; color: #bbb; white-space: nowrap; }
+.bulk-card { border: 1px solid #e8e8e8; border-radius: 7px; padding: 10px; background: #fff; margin-bottom: 8px; position: relative; }
+.bulk-card-num { font-size: 9px; font-weight: 700; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.bulk-remove-btn { position: absolute; top: 8px; right: 8px; background: none; border: none; color: #ddd; font-size: 14px; cursor: pointer; line-height: 1; }
+.bulk-remove-btn:hover { color: #e74c3c; }
+.bulk-add-card-btn { width: 100%; border: 1.5px dashed #ddd; border-radius: 7px; padding: 8px; background: #fafafa; color: #bbb; font-size: 11px; cursor: pointer; margin-bottom: 8px; }
+.bulk-add-card-btn:hover { border-color: #aaa; color: #888; }
+.bulk-save-btn { width: 100%; }
+.modal-input { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; margin-bottom: 4px; font-family: inherit; box-sizing: border-box; }
+.modal-textarea { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; height: 80px; resize: vertical; font-family: inherit; box-sizing: border-box; margin-bottom: 4px; }
+
+/* ── Marker-state key — live mini markers ── */
+.marker-key {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.marker-key-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #aaa;
+    letter-spacing: 0.2px;
+}
+.marker-key-canvas {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* Uncertain-location key wobbles gently, echoing the drifting map markers */
+.marker-key-canvas.key-drift canvas {
+    animation: key-drift 6s ease-in-out infinite alternate;
+}
+@keyframes key-drift {
+    from { transform: translate(-2px, 1px); }
+    to   { transform: translate(2px, -1px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .marker-key-canvas.key-drift canvas { animation: none; }
+}
+
+/* ── Entrance intro overlay ─────────────── */
+#intro-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    background: rgba(245,245,245,0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    cursor: default;
+    transition: opacity 0.8s ease;
+}
+#intro-overlay.visible { display: flex; }
+#intro-overlay.dismissing { opacity: 0; }
+#intro-inner { max-width: 560px; }
+#intro-heading {
+    font-family: 'Noto Serif Armenian', Georgia, 'Times New Roman', serif;
+    font-size: 40px;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: 0.5px;
+}
+#intro-body {
+    margin-top: 18px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #555;
+}
+#intro-lang {
+    margin-top: 30px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.intro-lang-btn {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    background: rgba(255,255,255,0.7);
+    border: 1.5px solid rgba(0,0,0,0.15);
+    border-radius: 20px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+.intro-lang-btn:hover {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #fff;
+}
+.intro-lang-btn:active { transform: scale(0.97); }
+.intro-lang-btn.active {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #fff;
+}
+#intro-enter {
+    margin-top: 22px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background: #1a1a1a;
+    border: none;
+    border-radius: 22px;
+    padding: 11px 28px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+#intro-enter:hover { background: #333; }
+#intro-enter:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: reduce) {
+    #intro-overlay { transition: none; }
+    .intro-lang-btn { transition: none; }
+    #intro-enter { transition: none; }
+}
