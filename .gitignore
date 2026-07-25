@@ -1,17 +1,3 @@
-.superpowers/
-.claude/
 .DS_Store
-
-# Iteration snapshots live as git tags, not as folders on disk:
-#   git show iteration-12-may:index.html
-#   git show iteration-9-june:index.html
-12 May/
-9 June/
-
-# Working documents — kept local, not published to the public repo
-25July_audit_dtes544.md
-plan/
-
-# Agent working notes and session logs — local only, never published
-docs/superpowers/
 .claude/
+.superpowers/
