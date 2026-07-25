@@ -44,6 +44,43 @@ styling, entrance, basemap styling.
 | Admin login | Leave the code alone. No backend, blast radius near zero. Rudi changes the password wherever else it was used. |
 | Duplicate folders | Tag the milestones, then remove. Recommendation — Rudi can veto. |
 
+### CORRECTION — A3.1 is VOID (verified 2026-07-25)
+
+**The audit's #1 finding is wrong. The Mapbox token IS URL-restricted.**
+
+The audit concluded "no URL restriction" from two tests that cannot detect one:
+a `GET` on the **styles** endpoint, and `GET /tokens/v2`. The styles endpoint
+answers `200` regardless of restrictions, and `/tokens/v2` does not return an
+`allowedUrls` field at all. I repeated both tests and reached the same wrong
+conclusion before testing the endpoint that actually enforces.
+
+Enforcement is on the **tiles** endpoint — which is also the endpoint that
+consumes the account's map-load quota. Measured:
+
+| Referer | tiles |
+|---|---|
+| `https://evil-scraper.example.com/` | **403** |
+| `https://rudipyan.github.io/buradayasadik/` | 200 |
+| `https://rudipyan.github.io/` | 200 |
+| `http://localhost:8802/` | 200 |
+| *(none)* | **403** |
+
+Dashboard confirms three allowed URLs on token `…BKoqAQ` (the one in HEAD),
+under the token name `buradayasadik-web`. Same token as `index.html` (sha256
+of both compared, identical).
+
+**Consequences:** no urgent rotation. The "restrict then rotate" item in
+"IF YOU DO ONLY 5 THINGS" #1 is already done. Do not repeat the
+unrestricted-token claim when presenting — it is checkable and false.
+
+**Standing caveat, not a finding:** a `Referer` can be spoofed with `curl`, so
+URL restriction deters casual and browser-based abuse rather than guaranteeing
+anything. That is true of every Mapbox `pk.` token; it is the documented
+mechanism and it is correctly applied here. A usage alert on the account is the
+sensible backstop.
+
+A3.2 (admin password in public history) is unaffected and still stands.
+
 ### Corrections to the audit, carried forward
 
 - **C-1:** the basemap labels are **Turkish, not English**. `coalesce` falls through to
