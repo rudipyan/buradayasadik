@@ -26,6 +26,11 @@ html, body {
     height: 100%;
 }
 
+/* 16px floor on form controls — below it, iOS Safari zooms the viewport on focus. */
+input, textarea, select {
+    font-size: 16px;
+}
+
 body {
     font-family: 'Noto Serif Armenian', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #f5f5f5;
@@ -95,8 +100,8 @@ body {
 }
 
 .controls .subtitle {
-    font-size: 11px;
-    color: #aaa;
+    font-size: 13px;
+    color: #5A554C;
     margin-top: 3px;
     font-style: italic;
 }
@@ -108,7 +113,7 @@ body {
     height: 24px;
     border-radius: 6px;
     font-size: 14px;
-    color: #aaa;
+    color: #5A554C;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -127,17 +132,17 @@ body {
     padding: 7px 10px 7px 32px;
     border: 1px solid #e5e5e5;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 16px;
     color: #333;
-    background: #fafafa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
+    background: #fafafa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235A554C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
     outline: none;
     transition: border-color 0.15s, background 0.15s;
 }
 .search-input:focus {
-    border-color: #bbb;
+    border-color: #5A554C;
     background-color: #fff;
 }
-.search-input::placeholder { color: #bbb; }
+.search-input::placeholder { color: #5A554C; }
 
 /* Sidebar body */
 .sidebar-body {
@@ -180,16 +185,16 @@ body {
 }
 
 .filter-section h3 {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    color: #888;
+    color: #5A554C;
 }
 
 .toggle-all-link {
-    font-size: 11px;
-    color: #aaa;
+    font-size: 13px;
+    color: #5A554C;
     background: none;
     border: none;
     cursor: pointer;
@@ -213,11 +218,11 @@ body {
     flex: 0 0 auto;
     width: fit-content;
     white-space: nowrap;
-    padding: 4px 10px;
+    padding: 5px 11px;
     border-radius: 20px;
     border: 1.5px solid #e5e5e5;
     background: #fff;
-    font-size: 10.5px;
+    font-size: 13px;
     font-weight: 500;
     color: #666;
     cursor: pointer;
@@ -239,16 +244,6 @@ body {
     border-color: #333;
 }
 
-/* Dot inside chip (for person avatar) */
-.chip-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    opacity: 0.6;
-    flex-shrink: 0;
-}
-
 /* Emotion chips — pill with color swatch */
 .emotion-chips-wrap {
     display: flex;
@@ -263,7 +258,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 4px 9px;
+    padding: 5px 10px;
     border-radius: 20px;
     flex: 0 0 auto;
     width: fit-content;
@@ -271,7 +266,7 @@ body {
     white-space: nowrap;
     border: 1.5px solid #e5e5e5;
     background: #fff;
-    font-size: 10.5px;
+    font-size: 13px;
     font-weight: 500;
     color: #555;
     cursor: pointer;
@@ -298,7 +293,7 @@ body {
     opacity: 0.5;
 }
 .emotion-chip:not(.active) {
-    color: #888;
+    color: #5A554C;
 }
 
 /* Divider */
@@ -314,8 +309,8 @@ body {
     border: 1px solid #f0f0f0;
     padding: 10px 12px;
     border-radius: 8px;
-    font-size: 11px;
-    color: #888;
+    font-size: 13px;
+    color: #5A554C;
     line-height: 1.7;
 }
 .stats-count {
@@ -327,26 +322,17 @@ body {
     margin-bottom: 4px;
 }
 .stats-label {
-    font-size: 10px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #bbb;
+    color: #5A554C;
     display: block;
     margin-bottom: 8px;
 }
 .stats-detail {
-    font-size: 11px;
-    color: #aaa;
+    font-size: 13px;
+    color: #5A554C;
     line-height: 1.6;
-}
-
-/* "No results" notice inside sidebar */
-.no-results {
-    font-size: 11px;
-    color: #bbb;
-    text-align: center;
-    padding: 8px 0;
-    display: none;
 }
 
 /* ── Mapbox popup ────────────────────────────── */
@@ -373,24 +359,12 @@ body {
 }
 
 .mapboxgl-popup-content .person-name {
-    color: #aaa;
+    color: #5A554C;
     font-size: 11px;
     font-weight: 500;
     margin-bottom: 10px;
     padding-bottom: 10px;
     border-bottom: 1px solid #eee;
-}
-
-.video-player {
-    margin: 1rem 0 0 0;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.video-player iframe {
-    width: 100%;
-    height: 200px;
-    border: none;
 }
 
 /* ── Floating video panel ────────────────────── */
@@ -415,7 +389,7 @@ body {
     background: #1a1a1a;
 }
 #video-panel-title {
-    font-size: 12px;
+    font-size: 13px;
     color: #ccc;
     font-style: italic;
     white-space: nowrap;
@@ -425,7 +399,7 @@ body {
 #video-panel-close {
     background: none;
     border: none;
-    color: #aaa;
+    color: #ccc;
     font-size: 18px;
     cursor: pointer;
     line-height: 1;
@@ -470,11 +444,11 @@ body {
 }
 .modal-field-label {
     display: block;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #888;
+    color: #5A554C;
     margin: 14px 0 4px 0;
 }
 .modal-box input[type="text"],
@@ -485,14 +459,14 @@ body {
     padding: 8px 10px;
     border: 1px solid #e5e5e5;
     border-radius: 8px;
-    font-size: 13px;
+    font-size: 16px;
     color: #333;
     outline: none;
     transition: border-color 0.15s;
     box-sizing: border-box;
     font-family: inherit;
 }
-.modal-box input:focus, .modal-box textarea:focus { border-color: #bbb; }
+.modal-box input:focus, .modal-box textarea:focus { border-color: #5A554C; }
 .modal-box textarea { min-height: 80px; resize: vertical; }
 .modal-error {
     font-size: 12px;
@@ -541,7 +515,7 @@ body {
     padding: 4px 10px;
     border-radius: 20px;
     border: 1.5px solid #e5e5e5;
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
     color: #666;
     cursor: pointer;
@@ -573,7 +547,7 @@ body {
     color: #fff;
     border: none;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 13px;
     cursor: pointer;
     transition: background 0.15s;
 }
@@ -597,10 +571,10 @@ body {
     box-shadow: 0 1px 4px rgba(0,0,0,0.12);
 }
 .lang-option {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
-    color: #aaa;
-    padding: 2px 6px;
+    color: #5A554C;
+    padding: 3px 7px;
     border-radius: 12px;
     cursor: pointer;
     white-space: nowrap;
@@ -627,8 +601,8 @@ body {
     border: none;
     border-bottom: 2px solid transparent;
     padding: 6px 14px;
-    font-size: 12px;
-    color: #aaa;
+    font-size: 13px;
+    color: #5A554C;
     cursor: pointer;
     margin-bottom: -2px;
     font-weight: 500;
@@ -637,29 +611,29 @@ body {
 .mgmt-search-row { display: flex; gap: 6px; margin-bottom: 8px; }
 .mgmt-search-row input { flex: 1; }
 .mgmt-story-list { border: 1px solid #eee; border-radius: 7px; overflow: hidden; max-height: 260px; overflow-y: auto; }
-.mgmt-story-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #f5f5f5; font-size: 11px; }
+.mgmt-story-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
 .mgmt-story-row:last-child { border-bottom: none; }
 .mgmt-story-info { flex: 1; min-width: 0; }
 .mgmt-story-info strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mgmt-story-info span { font-size: 10px; color: #bbb; }
+.mgmt-story-info span { font-size: 10px; color: #5A554C; }
 .mgmt-story-actions { display: flex; gap: 4px; flex-shrink: 0; }
 .mgmt-btn-edit { background: #f4f4f4; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer; }
 .mgmt-btn-del  { background: #fff0f0; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; color: #e74c3c; cursor: pointer; }
-.mgmt-count { font-size: 10px; color: #bbb; margin-top: 5px; }
-.mgmt-back-btn { background: none; border: none; font-size: 11px; color: #888; cursor: pointer; padding: 0; margin-bottom: 10px; }
+.mgmt-count { font-size: 10px; color: #5A554C; margin-top: 5px; }
+.mgmt-back-btn { background: none; border: none; font-size: 13px; color: #5A554C; cursor: pointer; padding: 0; margin-bottom: 10px; }
 .mgmt-back-btn:hover { color: #1a1a1a; }
 /* Bulk add */
 .bulk-person-row { display: flex; align-items: center; gap: 8px; background: #fffbf0; border: 1px solid #ffe4a0; border-radius: 7px; padding: 8px 10px; margin-bottom: 10px; }
-.bulk-person-hint { font-size: 9px; color: #bbb; white-space: nowrap; }
+.bulk-person-hint { font-size: 9px; color: #5A554C; white-space: nowrap; }
 .bulk-card { border: 1px solid #e8e8e8; border-radius: 7px; padding: 10px; background: #fff; margin-bottom: 8px; position: relative; }
-.bulk-card-num { font-size: 9px; font-weight: 700; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.bulk-card-num { font-size: 9px; font-weight: 700; color: #5A554C; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
 .bulk-remove-btn { position: absolute; top: 8px; right: 8px; background: none; border: none; color: #ddd; font-size: 14px; cursor: pointer; line-height: 1; }
 .bulk-remove-btn:hover { color: #e74c3c; }
-.bulk-add-card-btn { width: 100%; border: 1.5px dashed #ddd; border-radius: 7px; padding: 8px; background: #fafafa; color: #bbb; font-size: 11px; cursor: pointer; margin-bottom: 8px; }
-.bulk-add-card-btn:hover { border-color: #aaa; color: #888; }
+.bulk-add-card-btn { width: 100%; border: 1.5px dashed #ddd; border-radius: 7px; padding: 8px; background: #fafafa; color: #5A554C; font-size: 13px; cursor: pointer; margin-bottom: 8px; }
+.bulk-add-card-btn:hover { border-color: #5A554C; color: #5A554C; }
 .bulk-save-btn { width: 100%; }
-.modal-input { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; margin-bottom: 4px; font-family: inherit; box-sizing: border-box; }
-.modal-textarea { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 12px; height: 80px; resize: vertical; font-family: inherit; box-sizing: border-box; margin-bottom: 4px; }
+.modal-input { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 16px; margin-bottom: 4px; font-family: inherit; box-sizing: border-box; }
+.modal-textarea { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 10px; font-size: 16px; height: 80px; resize: vertical; font-family: inherit; box-sizing: border-box; margin-bottom: 4px; }
 
 /* ── Marker-state key — live mini markers ── */
 .marker-key {
@@ -672,8 +646,8 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 11px;
-    color: #aaa;
+    font-size: 13px;
+    color: #5A554C;
     letter-spacing: 0.2px;
 }
 .marker-key-canvas {
@@ -777,4 +751,34 @@ body {
     #intro-overlay { transition: none; }
     .intro-lang-btn { transition: none; }
     #intro-enter { transition: none; }
+}
+
+/* ── Small screens ────────────────────────────
+   At 390px the 480px video panel used to start at -122px and the 288px
+   sidebar covered 77% of the viewport. Both are made to fit; the sidebar
+   still opens by default, which is a decision taken in index.html. */
+@media (max-width: 640px) {
+    .controls {
+        width: auto;
+        left: 12px;
+        right: 12px;
+        top: 12px;
+        max-height: calc(100vh - 24px);
+    }
+    #sidebar-toggle {
+        top: 12px;
+        left: 12px;
+    }
+    #video-panel {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+    }
+    #video-panel iframe {
+        height: 52vw;
+    }
+    .mapboxgl-popup-content {
+        max-width: calc(100vw - 40px);
+    }
 }

@@ -192,6 +192,11 @@
                     <label for="edit-ghost" data-i18n="ghostLabel">Mevcut değil</label>
                 </div>
 
+                <div class="inline-check" style="margin-top:4px">
+                    <input type="checkbox" id="edit-location-unknown">
+                    <label for="edit-location-unknown" data-i18n="locationUnknownLabel">Konum belirsiz</label>
+                </div>
+
                 <span class="modal-field-label" data-i18n="emotionLabel">Duygular *</span>
                 <div class="emotion-check-grid" id="edit-emotion-checkboxes"></div>
 
@@ -224,6 +229,8 @@
         </div>
 
         <div class="modal-actions" style="margin-top:12px;border-top:1px solid #f0f0f0;padding-top:12px">
+            <button class="btn-secondary" onclick="exportStoriesJson()"
+                data-i18n="exportBtn">JSON olarak dışa aktar</button>
             <button class="btn-secondary" onclick="closeStoryManagement()"
                 data-i18n="cancelBtn">İptal</button>
         </div>
@@ -231,9 +238,15 @@
 </div>
 
 <!-- Mapbox GL JS Library (vendored v2.15.0 — works offline) -->
-<script src="mapbox-gl.js"></script>
+<script src="mapbox-gl.js" defer></script>
 
 <script>
+// The 963 KB Mapbox bundle is deferred so it no longer blocks first paint.
+// Deferred scripts are guaranteed to run before DOMContentLoaded, so `mapboxgl`
+// is defined by the time this body executes. Body left un-reindented on purpose
+// to keep the diff reviewable; the window exports at the bottom re-publish the
+// functions that inline on* attributes call.
+document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // CONFIGURATION
     // ========================================
@@ -556,6 +569,7 @@
             latLabel:          'Enlem',
             lngLabel:          'Boylam',
             ghostLabel:        'Artık mevcut değil',
+            locationUnknownLabel: 'Konum belirsiz',
             emotionLabel:      'Duygular',
             videoLabel:        'YouTube URL (isteğe bağlı)',
             bulkPersonLabel:   'Anlatıcı:',
@@ -596,6 +610,8 @@
             emo_green:         'Aidiyet',
             emo_red:           'Öfke',
             emo_black:         'Korku',
+            exportBtn:         'JSON olarak dışa aktar',
+            mapLoadError:      'Harita yüklenemedi. Bağlantınızı denetleyip sayfayı yenileyin.',
         },
         en: {
             panelTitle:        'We Lived Here',
@@ -623,6 +639,7 @@
             latLabel:          'Latitude',
             lngLabel:          'Longitude',
             ghostLabel:        'No longer exists',
+            locationUnknownLabel: 'Location uncertain',
             emotionLabel:      'Emotions',
             videoLabel:        'YouTube URL (optional)',
             bulkPersonLabel:   'Person:',
@@ -663,6 +680,8 @@
             emo_green:         'Belonging',
             emo_red:           'Anger',
             emo_black:         'Fear',
+            exportBtn:         'Export JSON',
+            mapLoadError:      'The map could not load. Check your connection and reload the page.',
         },
         hy: {
             panelTitle:        'Հոս ապրեցանք',
@@ -690,6 +709,7 @@
             latLabel:          'Լայնութիւն',
             lngLabel:          'Երկայնութիւն',
             ghostLabel:        'Այլեւս չկայ',
+            locationUnknownLabel: 'Անորոշ դիրք',
             emotionLabel:      'Զգացումներ',
             videoLabel:        'YouTube URL (ոչ պարտադիր)',
             bulkPersonLabel:   'Պատմող:',
@@ -730,6 +750,9 @@
             emo_green:         'Պատկանելիութիւն',
             emo_red:           'Բարկութիւն',
             emo_black:         'Վախ',
+            exportBtn:         'Արտահանել JSON',
+            // Western Armenian — drafted, not verified by a native speaker. Flagged in the report.
+            mapLoadError:      'Քարտէսը չկրցաւ բեռնուիլ։ Ստուգեցէ՛ք ձեր կապը եւ վերբեռնեցէ՛ք էջը։',
         },
     };
 
@@ -748,9 +771,25 @@
         return /^\d+$/.test(person) ? t('narratorLabel')(person) : person;
     }
 
+    // Mapbox labels every marker that has a popup "Map marker" — the same
+    // English string eighteen times, in every language mode. Replace it with
+    // the story's own title and narrator, resolved the same way getPopupHTML
+    // resolves them.
+    function markerAriaLabel(story) {
+        const title = typeof story.title === 'object'
+            ? (story.title[currentLang] ?? story.title.tr)
+            : story.title;
+        return `${title} — ${displayPersonName(story.person)}`;
+    }
+
     function applyLang(lang) {
         currentLang = lang;
         localStorage.setItem('uskudar-lang', lang);
+
+        // 'hyw' is the IETF subtag for Western Armenian specifically — the
+        // Eastern variant differs, and a screen reader given plain 'tr' reads
+        // the Armenian interface with Turkish pronunciation rules.
+        document.documentElement.lang = lang === 'hy' ? 'hyw' : lang;
 
         document.title = t('pageTitle');
 
@@ -795,6 +834,7 @@
                 if (marker) {
                     const popup = marker.getPopup();
                     if (popup) popup.setHTML(window._mapApi.getPopupHTML(story));
+                    marker.getElement().setAttribute('aria-label', markerAriaLabel(story));
                 }
             });
         }
@@ -876,6 +916,11 @@
     
     const map = new mapboxgl.Map({
         container: 'map',
+        // Basemap style. The Studio-hosted style below is the known-good default.
+        // A local copy exists at style/map.json (stripped to 8 layers, no labels) and
+        // style/map.original.json (untouched 50-layer download). To use the local
+        // stripped basemap, swap the line below for:  style: 'style/map.json',
+        // Verify markers still appear after switching -- see plan/ for the open issue.
         style: 'mapbox://styles/rudipyan/cmr9mbchq000m01qv1mf9gbmm',
         center: [29.033029012546365, 41.028500902039596],
         zoom: 15,
@@ -1409,6 +1454,9 @@
             // Outer el: used by Mapbox for positioning (transform must not be overridden)
             const el = document.createElement('div');
             el.style.cursor = 'pointer';
+            // Set before setPopup(): Mapbox only writes its own "Map marker"
+            // label when the element has none.
+            el.setAttribute('aria-label', markerAriaLabel(story));
 
             // Inner wrapper: safe to apply scale without conflicting with Mapbox positioning
             const inner = document.createElement('div');
@@ -1468,6 +1516,13 @@
                 markerObjects[story.id]._driftRestart = () => {
                     if (!driftRafId) driftRafId = requestAnimationFrame(drift);
                 };
+                // After marker.remove() the detached element's display is still
+                // '', so the loop's own guard never fires and it keeps calling
+                // setLngLat on a removed marker every frame. destroyMarkerAnim
+                // calls this on every teardown path.
+                markerObjects[story.id]._driftStop = () => {
+                    if (driftRafId) { cancelAnimationFrame(driftRafId); driftRafId = null; }
+                };
                 driftRafId = requestAnimationFrame(drift);
             }
         }
@@ -1481,8 +1536,10 @@
         let lastRebuildZoom   = null;
         function updateMarkerScales() {
             const z = map.getZoom();
-            // Rebuild only when zoom crosses a 0.25-step boundary to avoid rebuilding every frame
-            const bucket = Math.round(z * 4) / 4;
+            // Rebuild only when zoom crosses a 0.5-step boundary. Each crossing
+            // reallocates every marker canvas plus 70 particles per marker, so
+            // the bucket is deliberately coarse.
+            const bucket = Math.round(z * 2) / 2;
             if (bucket === lastRebuildZoom) return;
             lastRebuildZoom = bucket;
 
@@ -1508,7 +1565,11 @@
                 inner.replaceChild(newCanvas, oldCanvas);
             });
         }
-        map.on('zoom', updateMarkerScales);
+        // 'zoomend', not 'zoom': the latter fires every animation frame of a
+        // pinch, so a single z15→z20 gesture crossed ~20 buckets and rebuilt
+        // every canvas at each one. Rebuilding once the gesture settles keeps
+        // the 1:1 pixel-density rebuild (see above) without the mid-pinch jank.
+        map.on('zoomend', updateMarkerScales);
 
         // Marker-state key: live mini markers that behave like the real ones —
         // the legend teaches by demonstrating, not by symbol.
@@ -1541,8 +1602,47 @@
         // Map legend removed — no longer needed
     });
     
+    // The whole interface is built inside map.on('load'). If the style request
+    // fails — revoked token, offline, captive-portal wifi — 'load' never fires
+    // and the visitor gets a blank rectangle with no explanation. Show a short
+    // failure message instead. Deliberately only a message: the map remains the
+    // only route to the testimonies, there is no fallback rendering of them.
+    let mapLoaded = false;
+    let mapErrorPending = false;
+    map.on('load', () => { mapLoaded = true; });
+
+    function showMapLoadError() {
+        // Only for a map that never loaded — not for transient tile errors
+        // after, nor for a single 404 that arrives while the style is still
+        // resolving. Re-check after a grace period before saying anything.
+        if (mapLoaded || mapErrorPending) return;
+        mapErrorPending = true;
+        setTimeout(() => {
+            if (mapLoaded) return;
+            renderMapLoadError();
+        }, 4000);
+    }
+
+    function renderMapLoadError() {
+        if (document.getElementById('map-load-error')) return;
+        const container = document.getElementById('map');
+        if (!container) return;
+        const box = document.createElement('div');
+        box.id = 'map-load-error';
+        box.setAttribute('role', 'alert');
+        box.setAttribute('data-i18n', 'mapLoadError');
+        box.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+            'max-width:min(32rem,80vw);padding:1.25rem 1.5rem;background:#fff;color:#5A554C;' +
+            'border:1px solid #d8d3c8;border-radius:8px;font-size:14px;line-height:1.5;' +
+            'text-align:center;z-index:5;';
+        box.textContent = t('mapLoadError');
+        container.appendChild(box);
+    }
+
     map.on('error', (e) => {
-        console.error('Mapbox error:', e.error.message);
+        // e.error is absent on some error events — reading .message threw here.
+        console.error('Mapbox error:', e?.error?.message ?? e);
+        showMapLoadError();
     });
 
     function toggleSidebar() {
@@ -1552,15 +1652,34 @@
         btn.classList.toggle('collapsed');
     }
 
+    // videoUrl is admin-authored, so the blast radius is small, but it reaches
+    // iframe.src unfiltered. Allow only http(s) YouTube embeds; fail safe.
+    function safeVideoUrl(url) {
+        try {
+            const parsed = new URL(url, location.href);
+            if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+            const host = parsed.hostname.replace(/^www\./, '');
+            const allowed = host === 'youtube.com' || host === 'youtube-nocookie.com' || host === 'youtu.be';
+            return allowed ? parsed.href : null;
+        } catch (err) {
+            return null;
+        }
+    }
+
     function openVideoPanel(url, title) {
+        const safeUrl = safeVideoUrl(url);
+        if (!safeUrl) {
+            console.warn('Refusing to embed non-YouTube video URL:', url);
+            return;
+        }
         const panel = document.getElementById('video-panel');
         const iframe = document.getElementById('video-panel-iframe');
         const titleEl = document.getElementById('video-panel-title');
         // Close all popups
         document.querySelectorAll('.mapboxgl-popup').forEach(p => p.remove());
         // Set video
-        iframe.src = url;
-        titleEl.textContent = title || 'Sözlü tarih görüşmesi (kayıt)';
+        iframe.src = safeUrl;
+        titleEl.textContent = title || t('videoPanelTitle');
         panel.classList.add('visible');
     }
 
@@ -1577,6 +1696,20 @@
 
     function saveStories() {
         localStorage.setItem('uskudar-stories', JSON.stringify(stories));
+    }
+
+    // localStorage is the only store — a testimony added in the field exists on
+    // that one phone and nowhere else. This is the way off the device.
+    function exportStoriesJson() {
+        const blob = new Blob([JSON.stringify(stories, null, 2)], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `uskudar-stories-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
     }
 
     function seedStoriesFromHardcoded() {
@@ -1765,6 +1898,7 @@
         document.getElementById('edit-lat').value       = story.lat;
         document.getElementById('edit-lng').value       = story.lng;
         document.getElementById('edit-ghost').checked   = !!story.isGhost;
+        document.getElementById('edit-location-unknown').checked = story.locationKnown === false;
         document.getElementById('edit-video').value     = story.videoUrl || '';
         document.getElementById('edit-error').style.display = 'none';
 
@@ -1803,6 +1937,7 @@
         const lat       = parseFloat(document.getElementById('edit-lat').value);
         const lng       = parseFloat(document.getElementById('edit-lng').value);
         const isGhost   = document.getElementById('edit-ghost').checked;
+        const locationKnown = !document.getElementById('edit-location-unknown').checked;
         const videoUrl  = document.getElementById('edit-video').value.trim();
         const emotions  = [...document.querySelectorAll('#edit-emotion-checkboxes input:checked')]
                             .map(i => i.value);
@@ -1820,7 +1955,7 @@
             person,
             title:     mergeLangField(stories[idx].title, title, editingLang),
             narrative: mergeLangField(stories[idx].narrative, narrative, editingLang),
-            period, lat, lng, isGhost, emotions, videoUrl,
+            period, lat, lng, isGhost, locationKnown, emotions, videoUrl,
         };
         saveStories();
 
@@ -1844,6 +1979,8 @@
     }
 
     function destroyMarkerAnim(id) {
+        const marker = markerObjects[id];
+        if (marker?._driftStop) marker._driftStop();
         const inner = markerElements[id];
         if (inner) {
             const canvas = inner.querySelector('canvas');
@@ -1917,6 +2054,11 @@
                 <label for="bc-ghost-${idx}" data-i18n="ghostLabel">Mevcut değil</label>
             </div>
 
+            <div class="inline-check">
+                <input type="checkbox" class="bc-location-unknown" id="bc-locunk-${idx}">
+                <label for="bc-locunk-${idx}" data-i18n="locationUnknownLabel">Konum belirsiz</label>
+            </div>
+
             <span class="modal-field-label" data-i18n="emotionLabel">Duygular *</span>
             <div class="emotion-check-grid bc-emotions">${emotionPills}</div>
 
@@ -1954,6 +2096,7 @@
             const narrative = card.querySelector('.bc-narrative').value.trim();
             const period    = card.querySelector('.bc-period').value.trim();
             const isGhost   = card.querySelector('.bc-ghost').checked;
+            const locationKnown = !card.querySelector('.bc-location-unknown').checked;
             const emotions  = [...card.querySelectorAll('.bc-emotions input:checked')].map(i => i.value);
             const errEl     = card.querySelector('.bc-error');
             const valid     = !!title && !isNaN(lat) && !isNaN(lng) && !!narrative && emotions.length > 0;
@@ -1962,7 +2105,15 @@
             return valid ? {
                 id: Date.now() + Math.random(),
                 person: person || 'Unknown',
-                title, lat, lng, narrative, period, isGhost, emotions
+                // Seed stories carry {tr,en,hy} objects; writing bare strings here
+                // left bulk-added stories with no slot a translation could ever be
+                // added to (mergeLangField can merge into an object but not create
+                // one). `tr` is written as well as the current slot because every
+                // read site falls back to `.tr` — without it a story added in EN
+                // would render blank in TR/HY and crash the search filter.
+                title:     { tr: title, [currentLang]: title },
+                narrative: { tr: narrative, [currentLang]: narrative },
+                lat, lng, period, isGhost, locationKnown, emotions
             } : null;
         }).filter(Boolean);
 
@@ -2062,6 +2213,19 @@
         // The Enter button is what actually dismisses into the map.
         document.getElementById('intro-enter').addEventListener('click', dismissIntro);
     })();
+
+    // Re-publish the functions referenced from inline on* attributes — the
+    // DOMContentLoaded wrapper (added so the Mapbox tag could be deferred)
+    // means they are no longer implicitly global.
+    Object.assign(window, {
+        applyLang,
+        toggleSidebar, closeVideoPanel,
+        closeAdminLogin, submitAdminLogin,
+        switchMgmtTab, renderStoryList, showListView, saveEditedStory,
+        openEditView, deleteStory, closeStoryManagement, exportStoriesJson,
+        addBulkCard, saveBulkStories, bcEmotionToggle, updateBulkSaveBtn,
+    });
+});
 </script>
 
 </body>
