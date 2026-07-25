@@ -921,7 +921,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // style/map.original.json (untouched 50-layer download). To use the local
         // stripped basemap, swap the line below for:  style: 'style/map.json',
         // Verify markers still appear after switching -- see plan/ for the open issue.
-        style: 'mapbox://styles/rudipyan/cmr9mbchq000m01qv1mf9gbmm',
+        style: 'style/map.json',
         center: [29.033029012546365, 41.028500902039596],
         zoom: 15,
         pitch: 0,
@@ -1352,6 +1352,35 @@ document.addEventListener('DOMContentLoaded', function () {
                     }, visibleMs);
                 }
 
+                // Seed each ghost at a random point in its own visible/hidden cycle.
+                // Previously every ghost started hidden and first appeared after only
+                // 1–6 s, while a full cycle runs 11–38 s — so on load they all surfaced
+                // together in the first few seconds and the haunting read as one
+                // synchronised blink. Starting mid-cycle means some ghosts are already
+                // present when the visitor arrives and others are not.
+                function startGhostAtRandomPhase() {
+                    const visibleMs = 6000 + bias * 14000 + Math.random() * 4000;
+                    const hiddenMs  = 5000 + (1 - bias) * 13000 + Math.random() * 4000;
+                    const offset    = markerPhase * (visibleMs + hiddenMs);
+
+                    if (offset < visibleMs) {
+                        // Arrived part-way through a visible stretch: already here.
+                        canvas.style.opacity = '1';
+                        canvas._ghostVisible = true;
+                        ghostTimerId = setTimeout(() => {
+                            if (caught) return;
+                            canvas.style.opacity = '0';
+                            canvas._ghostVisible = false;
+                            ghostTimerId = setTimeout(scheduleGhost, hiddenMs);
+                        }, visibleMs - offset);
+                    } else {
+                        // Arrived part-way through an absence: stay gone for the remainder.
+                        canvas.style.opacity = '0';
+                        canvas._ghostVisible = false;
+                        ghostTimerId = setTimeout(scheduleGhost, (visibleMs + hiddenMs) - offset);
+                    }
+                }
+
                 if (REDUCED_MOTION) {
                     // Reduced motion: no haunting cycle — the ghost stays visible,
                     // static and faint. Ghost-ness reads via desaturation alone.
@@ -1371,9 +1400,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Zoom rebuild: already visible, just schedule the next hide
                         scheduleGhost();
                     } else {
-                        // First appearance: 1–6 s staggered so markers don't all pop at once
-                        const initialDelay = 1000 + markerPhase * 5000;
-                        ghostTimerId = setTimeout(scheduleGhost, initialDelay);
+                        // First load: start somewhere random inside the cycle, not all together
+                        startGhostAtRandomPhase();
                     }
                 }
 
@@ -1534,27 +1562,55 @@ document.addEventListener('DOMContentLoaded', function () {
         const SCALE_THRESHOLD = 16;  // zoom level below which markers stay at BASE_SIZE
         const SCALE_FACTOR    = 1.6; // growth multiplier per zoom step above threshold
         let lastRebuildZoom   = null;
+        let lastBuiltScale    = 1;    // the scale the current canvases were rendered at
+
+        // Scale for a given zoom. Markers hold BASE_SIZE below the threshold and
+        // grow geometrically above it.
+        function scaleForZoom(z) {
+            return z > SCALE_THRESHOLD ? Math.pow(SCALE_FACTOR, z - SCALE_THRESHOLD) : 1;
+        }
+
+        // Interim CSS scale, applied every frame of the gesture so the markers
+        // track the zoom immediately. This is cheap (one transform per marker,
+        // no allocation); the crisp 1:1 canvas rebuild follows at 'zoomend' and
+        // clears these transforms. Without this the markers visibly lag the map
+        // until the gesture settles.
+        function applyLiveScale() {
+            const ratio = scaleForZoom(map.getZoom()) / lastBuiltScale;
+            stories.forEach(story => {
+                const inner = markerElements[story.id];
+                if (inner) inner.style.transform = ratio === 1 ? '' : `scale(${ratio})`;
+            });
+        }
+        map.on('zoom', applyLiveScale);
+
         function updateMarkerScales() {
             const z = map.getZoom();
             // Rebuild only when zoom crosses a 0.5-step boundary. Each crossing
             // reallocates every marker canvas plus 70 particles per marker, so
             // the bucket is deliberately coarse.
             const bucket = Math.round(z * 2) / 2;
-            if (bucket === lastRebuildZoom) return;
+            if (bucket === lastRebuildZoom) {
+                applyLiveScale();   // keep the interim transform correct between buckets
+                return;
+            }
             lastRebuildZoom = bucket;
 
-            const cssScale = z > SCALE_THRESHOLD
-                ? Math.pow(SCALE_FACTOR, z - SCALE_THRESHOLD)
-                : 1;
+            const cssScale = scaleForZoom(z);
             const physicalSize = Math.round(BASE_SIZE * cssScale);
+            lastBuiltScale = cssScale;
 
             stories.forEach(story => {
                 const inner = markerElements[story.id];
                 if (!inner) return;
                 const oldCanvas = inner.querySelector('canvas');
                 if (!oldCanvas) return;
-                // Skip rebuild while user is hovering — avoids interrupting the animation
+                // Skip rebuild while user is hovering — avoids interrupting the animation.
+                // Leave the interim transform in place so a hovered marker still tracks zoom.
                 if (oldCanvas._hovering) return;
+                // Canvas is about to be rebuilt at the correct physical size, so the
+                // interim CSS scale for this marker is no longer needed.
+                inner.style.transform = '';
                 // Rebuild canvas at new physical size — preserves sharpness.
                 // Pass ghost's current visible state so it doesn't restart from scratch.
                 const newCanvas = buildParticleMarker(story.emotions, physicalSize, story.locationKnown === false, !!story.isGhost, !!oldCanvas._ghostVisible);
