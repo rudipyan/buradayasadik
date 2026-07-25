@@ -20,6 +20,4 @@ A counter-map of Armenian memory in Üsküdar, Istanbul: a browser prototype pla
 
 **Mapbox dependency.** `mapbox-gl.js` / `mapbox-gl.css` (v2.15.0) and the `Noto Serif Armenian` woff2 are vendored here, but the map is *not* offline-capable. Two comments in `index.html`, at the `mapbox-gl.css` link and the `mapbox-gl.js` script tag, claim "works offline"; that is false. The style document, all vector tiles, all label glyphs and the sprites are fetched from `api.mapbox.com` at runtime under a personal token. If that token is rotated without updating the source, if the account lapses, or if there is no network, the library parses but `map.on('load')` never fires and the page is blank. The map is the only route to the content, so that failure is total. Story 18's recording is a YouTube embed and can be taken down independently.
 
-**Stale docs.** `docs/superpowers/` is kept for the record but has drifted: the 2026-06-05 plan says "No git: this directory is not a git repository" (it is one, 55+ commits), and the 2026-05-18 plan cites line numbers that no longer correspond to anything. The specs are still accurate about intent; the plans are archaeology.
-
 **Licences.** `LICENSE` (MIT) covers the source code only. The testimony is covered separately, on different terms, by `DATA-LICENSE.md`.

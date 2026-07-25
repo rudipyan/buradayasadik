@@ -11,3 +11,7 @@
 # Working documents — kept local, not published to the public repo
 25July_audit_dtes544.md
 plan/
+
+# Agent working notes and session logs — local only, never published
+docs/superpowers/
+.claude/

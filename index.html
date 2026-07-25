@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Üsküdar Tanıklık Haritası</title>
     
-    <!-- Mapbox CSS (vendored v2.15.0 — works offline) -->
+    <!-- Mapbox CSS, vendored v2.15.0. The library is local; the map is NOT
+         offline-capable — style, tiles and glyphs are fetched from api.mapbox.com. -->
     <link href="mapbox-gl.css" rel="stylesheet">
     
     <link href="styles.css" rel="stylesheet">
@@ -83,8 +84,6 @@
             <div class="emotion-chips-wrap" id="emotionGrid"></div>
         </div>
 
-        <!-- ghost markers are always shown; hidden input keeps downstream JS working -->
-        <input type="checkbox" id="ghost-toggle" checked style="display:none">
 
         <div class="sidebar-divider"></div>
 
@@ -236,7 +235,8 @@
     </div>
 </div>
 
-<!-- Mapbox GL JS Library (vendored v2.15.0 — works offline) -->
+<!-- Mapbox GL JS, vendored v2.15.0. Local library only: with no network it
+     parses fine but map.on('load') never fires and the page stays blank. -->
 <script src="mapbox-gl.js" defer></script>
 
 <script>
@@ -813,8 +813,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Lang pill: update active state
-        document.querySelectorAll('.lang-option').forEach(btn => {
+        // Active state for every language control at once — the switcher pill and
+        // the intro overlay's buttons. Previously the intro kept its own copy of
+        // this logic (markActiveLang), so the two could disagree.
+        document.querySelectorAll('.lang-option, .intro-lang-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.lang === lang);
         });
 
@@ -1120,13 +1122,12 @@ document.addEventListener('DOMContentLoaded', function () {
         function updateMarkerVisibility() {
             let visibleCount = 0;
             stories.forEach(story => {
-                const showGhosts = document.getElementById('ghost-toggle')?.checked ?? true;
-
+                // Ghost markers are always shown — the visitor-facing ghost filter was
+                // removed, and the hidden always-checked stub that stood in for it is gone.
                 const isVisible =
                     activePeople.has(story.person) &&
                     story.emotions.some(e => activeEmotions.has(e)) &&
-                    storyMatchesSearch(story) &&
-                    (showGhosts || !story.isGhost);
+                    storyMatchesSearch(story);
                 if (markerObjects[story.id]) {
                     const outerEl = markerObjects[story.id].getElement();
                     outerEl.style.display = isVisible ? '' : 'none';
@@ -2087,7 +2088,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const lbl = document.createElement('label');
             lbl.htmlFor = cb.id;
             lbl.textContent = ' ' + t(`emo_${key}`);
-            lbl.className = 'emotion-check-label' + (cb.checked ? ' checked' : '');
+            lbl.className = cb.checked ? 'checked' : '';
             if (cb.checked) { lbl.style.backgroundColor = hex; lbl.style.borderColor = hex; }
             cb.addEventListener('change', () => {
                 lbl.classList.toggle('checked', cb.checked);
@@ -2194,7 +2195,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 style="display:none"
                 onchange="bcEmotionToggle(this,'${hex}')">
              <label for="bc-em-${idx}-${key}"
-                class="emotion-check-label"
                 style="font-size:10px;padding:2px 8px;">${t(`emo_${key}`)}</label>`
         ).join('');
 
@@ -2372,15 +2372,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Language buttons switch the site language and stay open so it stays readable.
-        const langButtons = overlay.querySelectorAll('.intro-lang-btn');
-        const markActiveLang = lang =>
-            langButtons.forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
-        markActiveLang(currentLang);
-        langButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                applyLang(btn.dataset.lang);
-                markActiveLang(btn.dataset.lang);
-            });
+        // applyLang owns the active state for these too, so there is one source of truth.
+        applyLang(currentLang);
+        overlay.querySelectorAll('.intro-lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => applyLang(btn.dataset.lang));
         });
 
         // The Enter button is what actually dismisses into the map.
