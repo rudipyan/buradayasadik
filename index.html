@@ -1193,7 +1193,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const scale = SIZE / BASE_SIZE;
             const cx = SIZE / 2, cy = SIZE / 2;
             // Drifting markers use a wider, looser cluster to suggest uncertain location
-            const clusterR = (drifting ? 20 : 14) * scale;
+            // One cluster radius for every marker. Drifting markers used to spread to
+            // 20 instead of 14, which is 2.04x the area for the same 70 particles: the
+            // dots stopped overlapping and became individually countable, so Mikail's
+            // marker read as holding more testimony than its neighbours rather than
+            // less certainty about where it belongs. Uncertainty is carried by the
+            // drift motion instead — the same decision the marker key makes, where all
+            // three clouds are one size and only colour and movement differ.
+            const clusterR = 14 * scale;
             const repR     = 13 * scale;
             const N = 70;
             const n = emotions.length;
